@@ -59,9 +59,9 @@ export function SystemMap() {
         )}
 
         {/* Train blips (on top of lines, behind station dots) */}
-        {visibleTrains.map((train, i) => (
+        {visibleTrains.map((train) => (
           <TrainBlip
-            key={`${train.color}-${train.destAbbr}-${i}`}
+            key={train.id}
             x={train.x}
             y={train.y}
             color={train.hexcolor}

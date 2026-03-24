@@ -2,15 +2,17 @@ import type { ETDResponse } from '@/api/types';
 import { LINES, STATION_MAP, LINE_PATH_NUDGE, type MapLine } from './map-data';
 
 export interface EstimatedTrain {
+  id: string;
   x: number;
   y: number;
   color: string;
   hexcolor: string;
   destination: string;
   destAbbr: string;
+  sourceStation: string;
 }
 
-const AVG_TRAVEL_TIME = 3;
+const AVG_TRAVEL_TIME = 4.5;
 const DEDUP_GAP = 5;
 
 interface Sighting {
@@ -20,6 +22,7 @@ interface Sighting {
   minutes: number;
   color: string;
   hexcolor: string;
+  direction: 'North' | 'South';
 }
 
 function findLineForTrain(color: string, stationAbbr: string): MapLine | undefined {
@@ -27,11 +30,6 @@ function findLineForTrain(color: string, stationAbbr: string): MapLine | undefin
   return LINES.find((l) => l.color === upper && l.stations.includes(stationAbbr));
 }
 
-/**
- * Given a train sighting, compute its estimated (x, y) position on the map
- * by interpolating between the station it's approaching and the previous
- * station on the line (the direction it's coming from).
- */
 function computePosition(
   sighting: Sighting,
   line: MapLine,
@@ -40,8 +38,9 @@ function computePosition(
   if (stIdx === -1) return null;
 
   const destIdx = line.stations.indexOf(sighting.destAbbr);
-  const movingForward = destIdx >= stIdx;
+  if (destIdx === -1) return null;
 
+  const movingForward = destIdx > stIdx;
   const prevIdx = movingForward ? stIdx - 1 : stIdx + 1;
 
   const currentStation = STATION_MAP.get(line.stations[stIdx]);
@@ -56,8 +55,8 @@ function computePosition(
     return { x: currentStation.x, y: currentStation.y };
   }
 
-  // fraction=1 means at the station, fraction=0 means at the previous station
-  const fraction = 1 - Math.min(sighting.minutes / AVG_TRAVEL_TIME, 1);
+  const t = Math.min(sighting.minutes / AVG_TRAVEL_TIME, 1);
+  const fraction = 1 - t * t;
 
   return {
     x: prevStation.x + (currentStation.x - prevStation.x) * fraction,
@@ -65,11 +64,6 @@ function computePosition(
   };
 }
 
-/**
- * From a full set of ETD responses (one per station), estimate individual
- * train positions on the map by interpolation, then deduplicate so the
- * same physical train isn't rendered multiple times.
- */
 export function interpolateTrains(allETDs: ETDResponse[]): EstimatedTrain[] {
   const sightings: Sighting[] = [];
 
@@ -84,13 +78,12 @@ export function interpolateTrains(allETDs: ETDResponse[]): EstimatedTrain[] {
           minutes: est.minutes === 'Leaving' ? 0 : est.minutes,
           color: est.color,
           hexcolor: est.hexcolor,
+          direction: est.direction,
         });
       }
     }
   }
 
-  // Group by (color + destination) — each group contains reports of the same
-  // set of trains observed from different stations along the line.
   const groups = new Map<string, Sighting[]>();
   for (const s of sightings) {
     const key = `${s.color.toUpperCase()}::${s.destAbbr}`;
@@ -107,9 +100,8 @@ export function interpolateTrains(allETDs: ETDResponse[]): EstimatedTrain[] {
   for (const [, group] of groups) {
     group.sort((a, b) => a.minutes - b.minutes);
 
-    // Walk through sorted sightings; pick the lowest-minutes sighting for
-    // each unique physical train (skip subsequent sightings within DEDUP_GAP).
     let lastPlacedMin = -Infinity;
+    let trainIdx = 0;
 
     for (const sighting of group) {
       if (sighting.minutes - lastPlacedMin < DEDUP_GAP) continue;
@@ -122,15 +114,18 @@ export function interpolateTrains(allETDs: ETDResponse[]): EstimatedTrain[] {
 
       const [nx, ny] = LINE_PATH_NUDGE[line.color] ?? [0, 0];
       trains.push({
+        id: `${sighting.color.toUpperCase()}-${sighting.destAbbr}-${trainIdx}`,
         x: pos.x + nx,
         y: pos.y + ny,
         color: sighting.color,
         hexcolor: sighting.hexcolor,
         destination: sighting.destination,
         destAbbr: sighting.destAbbr,
+        sourceStation: sighting.stationAbbr,
       });
 
       lastPlacedMin = sighting.minutes;
+      trainIdx++;
     }
   }
 
