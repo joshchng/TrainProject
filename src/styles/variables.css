@@ -1,0 +1,99 @@
+:root {
+  /* === Earth + terminal palette === */
+  --color-earth-black: #11100e;
+  --color-soil: #1a1714;
+  --color-bark: #4a372c;
+  --color-walnut: #6b4e3d;
+  --color-russet: #8a6a52;
+  --color-gold-green: #a8985c;
+  --color-moss-dark: #2a3328;
+  --color-moss: #3d5244;
+  --color-fern: #5c6e54;
+  --color-sand: #c9b896;
+  --color-beige: #e3d5bc;
+  --color-parchment: #f0e8d8;
+  --color-cream: var(--color-parchment);
+  --color-terminal-green: #6ecf72;
+  --color-warm-black: var(--color-soil);
+  --color-alert-red: #c24a4a;
+  --color-bart-blue: #0099d8;
+
+  /* Aliases for existing token names */
+  --color-carpet-brown: var(--color-walnut);
+  --color-seat-brown: var(--color-russet);
+  --color-crt-green: var(--color-terminal-green);
+
+  /* === Line Colors === */
+  --line-yellow: #ffe800;
+  --line-blue: #0099d8;
+  --line-orange: #f58220;
+  --line-green: #4db848;
+  --line-red: #ed1c24;
+
+  /* === Semantic Colors === */
+  --bg-primary: var(--color-soil);
+  --bg-panel: #231e19;
+  /* Card / map interior: warm dark beige (was green-tinted) */
+  --bg-panel-content: #2c2822;
+  --bg-titlebar: var(--color-bark);
+  /* Service advisory strip */
+  --bg-advisory: #263530;
+  --bg-input: #1e1b18;
+  --text-primary: var(--color-parchment);
+  --text-secondary: var(--color-beige);
+  --text-muted: #9a8b78;
+  --text-live: var(--color-terminal-green);
+  --text-alert: var(--color-alert-red);
+  --border-panel: var(--color-walnut);
+  --border-accent: var(--color-fern);
+  --link-color: #7eb3c4;
+  --color-accent-warm: #b87a54;
+
+  /* === Surfaces === */
+  --surface-page: var(--color-earth-black);
+  --surface-card: #1f1b17;
+  --border-subtle: rgba(201, 184, 150, 0.22);
+  --color-interactive-accent: var(--color-fern);
+
+  /* === Typography (terminal / 90s workstation) === */
+  --font-display: 'VT323', monospace;
+  --font-ui: 'IBM Plex Mono', 'Courier New', monospace;
+  --font-heading: var(--font-ui);
+  --font-body: var(--font-ui);
+  --font-mono: var(--font-ui);
+  --font-pixel: 'VT323', monospace;
+
+  --text-xs: clamp(0.625rem, 0.55rem + 0.25vw, 0.75rem);
+  --text-sm: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+  --text-base: clamp(0.875rem, 0.8rem + 0.3vw, 1rem);
+  --text-lg: clamp(1rem, 0.9rem + 0.4vw, 1.25rem);
+  --text-xl: clamp(1.25rem, 1.1rem + 0.5vw, 1.5rem);
+  --text-2xl: clamp(1.5rem, 1.2rem + 0.8vw, 2rem);
+  --text-3xl: clamp(1.75rem, 1.4rem + 1vw, 2.5rem);
+
+  /* === Spacing (4px base) === */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* === Borders === */
+  --border-bevel-light: #A08060;
+  --border-bevel-dark: #3A2A1A;
+  --border-width: 2px;
+  --border-hairline: 1px;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-card: 8px;
+
+  /* === Layout === */
+  --max-width: 1200px;
+  --sidebar-width: 320px;
+  --header-height: 56px;
+  --footer-height: 36px;
+}

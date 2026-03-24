@@ -1,0 +1,25 @@
+.mapContainer {
+  width: 100%;
+  background-color: var(--bg-panel-content);
+  border: var(--border-hairline) solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
+
+.mapSvg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.linePath {
+  transition: stroke-opacity 0.3s ease;
+}
+
+.stationGroup {
+  transition: transform 0.15s ease;
+}
+
+.trainBlip {
+  pointer-events: none;
+}
