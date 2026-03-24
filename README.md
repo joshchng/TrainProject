@@ -1,73 +1,80 @@
-# React + TypeScript + Vite
+# TrainProject — BART live map
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A retro-styled web app for the [San Francisco Bay Area BART](https://www.bart.gov/) system: interactive map, live train positions, departures, advisories, elevator status, and per-station detail pages. Data comes from the [official BART API](https://api.bart.gov/).
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **System map** with stations and train blips, plus line and direction filters
+- **Sidebar**: selected station info, departure board (ETD), train count, filters
+- **Alert ticker** for system advisories
+- **Station routes** at `/station/:abbr` (BART station abbreviation)
+- **About** page at `/about`
 
-## React Compiler
+## Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- [React](https://react.dev/) 19 + [TypeScript](https://www.typescriptlang.org/)
+- [Vite](https://vitejs.dev/) 8
+- [TanStack Query](https://tanstack.com/query) for server state
+- [Zustand](https://zustand-demo.pmnd.rs/) for UI state
+- [React Router](https://reactrouter.com/) 7
+- [Framer Motion](https://www.framer.com/motion/) for motion
+- Optional **[Cloudflare Worker](https://developers.cloudflare.com/workers/)** (`worker/`) that proxies and caches BART API responses under `/api`
 
-## Expanding the ESLint configuration
+## Prerequisites
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **Node.js** 20+ (or current LTS) recommended
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Setup
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+git clone https://github.com/joshchng/TrainProject.git
+cd TrainProject
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Environment (optional)
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Create a `.env` in the project root if you need to override defaults:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+| Variable | Purpose |
+|----------|---------|
+| `VITE_API_BASE_URL` | API prefix for the frontend (default: `/api`) |
+| `VITE_BART_API_KEY` | Reserved if you call BART directly from the client; the included worker uses BART’s public demo key |
+
+`.env` is gitignored—do not commit real secrets.
+
+## Development
+
+**Frontend only** (Vite dev server; `/api` is proxied when a worker is available):
+
+```bash
+npm run dev
 ```
+
+**Frontend + local API proxy** (run the Worker on port `8787`, matching `vite.config.ts`):
+
+```bash
+npm run dev:worker   # terminal 1
+npm run dev          # terminal 2
+```
+
+Open the URL Vite prints (usually `http://localhost:5173`).
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Vite dev server with HMR |
+| `npm run build` | Typecheck + production build to `dist/` |
+| `npm run preview` | Serve the production build locally |
+| `npm run lint` | ESLint |
+| `npm run dev:worker` | `wrangler dev` for the Cloudflare Worker |
+
+## Deploying
+
+- **Static UI**: build with `npm run build` and host the `dist/` output on any static host.
+- **API**: deploy the Worker from `worker/` (see `worker/wrangler.toml`) and point `VITE_API_BASE_URL` at your deployed `/api` base in production builds if it differs from the default.
+
+## License
+
+This project is for personal/educational use. BART schedules and data are provided by BART; use of the API is subject to [BART’s terms](https://www.bart.gov/about/developers).
