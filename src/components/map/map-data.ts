@@ -13,11 +13,18 @@ export interface MapLine {
 }
 
 /*
- * Station x,y are pixel coordinates in the SVG viewBox coordinate space
- * (1024x928). Hand-tuned to the official BART schematic layout.
+ * Station x,y live in content space roughly 0..1024 × 0..928. The exported
+ * viewBox adds padding so labels (especially SF trunk, text-anchor end west of dots)
+ * are not clipped at the SVG edges.
  */
+const MAP_PAD = { left: 72, right: 28, top: 12, bottom: 16 } as const;
 
-export const MAP_VIEWBOX = { width: 1024, height: 928 } as const;
+export const MAP_VIEWBOX = {
+  minX: -MAP_PAD.left,
+  minY: -MAP_PAD.top,
+  width: 1024 + MAP_PAD.left + MAP_PAD.right,
+  height: 928 + MAP_PAD.top + MAP_PAD.bottom,
+} as const;
 
 /**
  * Abbrev label is placed west of the dot on the SF trunk / far-east map margin;
@@ -227,14 +234,14 @@ function tangentForEdge(abbrA: string, abbrB: string): { dx: number; dy: number 
   return fallback();
 }
 
-function edgeNormal(abbrA: string, abbrB: string): { nx: number; ny: number } {
+export function edgeNormal(abbrA: string, abbrB: string): { nx: number; ny: number } {
   const { dx, dy } = tangentForEdge(abbrA, abbrB);
   const len = Math.sqrt(dx * dx + dy * dy);
   if (len === 0) return { nx: 0, ny: 0 };
   return { nx: -dy / len, ny: dx / len };
 }
 
-function edgeOffset(lineColor: string, abbrA: string, abbrB: string): number {
+export function edgeOffset(lineColor: string, abbrA: string, abbrB: string): number {
   const key = segmentKey(abbrA, abbrB);
   const linesOn = SEGMENT_LINES.get(key) ?? [lineColor];
   const count = linesOn.length;

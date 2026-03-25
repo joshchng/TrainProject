@@ -4,7 +4,7 @@ import styles from './RetroButton.module.css';
 interface RetroButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
   active?: boolean;
-  variant?: 'default' | 'small';
+  variant?: 'default' | 'small' | 'back';
 }
 
 export function RetroButton({

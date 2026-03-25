@@ -1,7 +1,11 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { useDepartures } from '@/api/hooks';
+import { useAllDepartures, useDepartures } from '@/api/hooks';
 import { useAppStore } from '@/store/app-store';
-import { filterDepartures, type FlatDeparture } from '@/store/selectors';
+import {
+  filterAllStationsDepartures,
+  filterDepartures,
+  type FlatDeparture,
+} from '@/store/selectors';
 import { formatMinutes } from '@/utils/time';
 import { RetroWindow } from '@/components/chrome/RetroWindow';
 import styles from './DepartureBoard.module.css';
@@ -23,7 +27,13 @@ function FlipCell({ value, className = '' }: { value: string; className?: string
   );
 }
 
-function DepartureRow({ departure }: { departure: FlatDeparture }) {
+function DepartureRow({
+  departure,
+  showOrigin,
+}: {
+  departure: FlatDeparture;
+  showOrigin?: boolean;
+}) {
   const minuteStr = formatMinutes(departure.minutes);
   const isLeaving = departure.minutes === 'Leaving' || departure.minutes === 0;
 
@@ -36,6 +46,11 @@ function DepartureRow({ departure }: { departure: FlatDeparture }) {
       exit={{ opacity: 0, y: 10 }}
       transition={{ duration: 0.2 }}
     >
+      {showOrigin && (
+        <td className={styles.cellFrom} title={departure.originName}>
+          <span className={styles.fromAbbr}>{departure.originAbbr ?? '—'}</span>
+        </td>
+      )}
       <td className={styles.cellDest}>
         <div className={styles.cellDestInner}>
           <span
@@ -59,25 +74,33 @@ function DepartureRow({ departure }: { departure: FlatDeparture }) {
 }
 
 interface DepartureBoardProps {
-  /** When set, shows ETDs for this station (e.g. station detail route). Otherwise uses map selection. */
   forcedStation?: string | null;
-  /** Grow to fill a flex parent and scroll the table inside (home sidebar). */
   fillHeight?: boolean;
 }
 
 export function DepartureBoard({ forcedStation, fillHeight }: DepartureBoardProps) {
   const selectedStation = useAppStore((s) => s.selectedStation);
+  const viewAllDepartures = useAppStore((s) => s.viewAllDepartures);
   const activeStation = forcedStation ?? selectedStation;
+  const showSystemWide = viewAllDepartures && !forcedStation;
   const activeLines = useAppStore((s) => s.activeLines);
   const directionFilter = useAppStore((s) => s.directionFilter);
-  const { data: etdData, isLoading } = useDepartures(activeStation);
 
-  const departures = filterDepartures(etdData, activeLines, directionFilter);
+  const { data: allEtds, isLoading: loadingAll } = useAllDepartures();
+  const { data: etdData, isLoading: loadingOne } = useDepartures(
+    showSystemWide ? null : activeStation,
+  );
+
+  const departures = showSystemWide
+    ? filterAllStationsDepartures(allEtds, activeLines, directionFilter)
+    : filterDepartures(etdData, activeLines, directionFilter);
+
+  const isLoading = showSystemWide ? loadingAll : loadingOne;
 
   const winClass = fillHeight ? styles.windowFill : '';
   const bodyClass = fillHeight ? styles.windowBody : '';
 
-  if (!activeStation) {
+  if (!activeStation && !showSystemWide) {
     return (
       <RetroWindow title="Departures" className={winClass} contentClassName={bodyClass}>
         <div className={styles.empty}>
@@ -88,12 +111,12 @@ export function DepartureBoard({ forcedStation, fillHeight }: DepartureBoardProp
     );
   }
 
+  const title = showSystemWide
+    ? 'Departures — All departures'
+    : `Departures — ${etdData?.stationName ?? activeStation}`;
+
   return (
-    <RetroWindow
-      title={`Departures — ${etdData?.stationName ?? activeStation}`}
-      className={winClass}
-      contentClassName={bodyClass}
-    >
+    <RetroWindow title={title} className={winClass} contentClassName={bodyClass}>
       {isLoading ? (
         <div className={styles.loading}>Loading departures...</div>
       ) : departures.length === 0 ? (
@@ -103,6 +126,7 @@ export function DepartureBoard({ forcedStation, fillHeight }: DepartureBoardProp
           <table className={styles.table}>
             <thead>
               <tr>
+                {showSystemWide && <th className={styles.headerFrom}>From</th>}
                 <th className={styles.headerDest}>Destination</th>
                 <th className={styles.headerMin}>Min</th>
                 <th className={styles.headerPlat}>Plat</th>
@@ -113,8 +137,9 @@ export function DepartureBoard({ forcedStation, fillHeight }: DepartureBoardProp
               <AnimatePresence mode="popLayout">
                 {departures.map((dep, i) => (
                   <DepartureRow
-                    key={`${dep.abbreviation}-${dep.direction}-${i}`}
+                    key={`${dep.originAbbr ?? ''}-${dep.abbreviation}-${dep.direction}-${dep.destination}-${i}`}
                     departure={dep}
+                    showOrigin={showSystemWide}
                   />
                 ))}
               </AnimatePresence>

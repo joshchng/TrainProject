@@ -3,6 +3,7 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { STATION_MAP } from '@/components/map/map-data';
 import { useAppStore } from '@/store/app-store';
 import { useStations } from '@/api/hooks';
+import { DirectionFilter } from '@/components/filters/DirectionFilter';
 import { DepartureBoard } from '@/components/panels/DepartureBoard';
 import { ElevatorStatus } from '@/components/panels/ElevatorStatus';
 import { PixelDivider } from '@/components/chrome/PixelDivider';
@@ -23,7 +24,7 @@ export function StationPage() {
   }, [abbr, selectStation]);
 
   if (!abbr || !STATION_MAP.has(abbr)) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/map" replace />;
   }
 
   const meta = stations?.find((s) => s.abbr === abbr);
@@ -32,7 +33,7 @@ export function StationPage() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <RetroButton type="button" variant="small" onClick={() => navigate('/')}>
+        <RetroButton type="button" variant="back" onClick={() => navigate('/map')}>
           ← Map
         </RetroButton>
         <div className={styles.titleBlock}>
@@ -63,7 +64,10 @@ export function StationPage() {
 
       <div className={styles.grid}>
         <div className={styles.col}>
-          <DepartureBoard forcedStation={abbr} />
+          <div className={styles.departuresStack}>
+            <DirectionFilter compact />
+            <DepartureBoard forcedStation={abbr} />
+          </div>
         </div>
         <div className={styles.col}>
           <ElevatorStatus stationAbbr={abbr} stationName={meta?.name} />

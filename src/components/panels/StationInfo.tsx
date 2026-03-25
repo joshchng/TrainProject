@@ -8,12 +8,19 @@ import styles from './StationInfo.module.css';
 
 export function StationInfo() {
   const selectedStation = useAppStore((s) => s.selectedStation);
+  const viewAllDepartures = useAppStore((s) => s.viewAllDepartures);
   const { data: stations, isLoading } = useStations();
 
   if (!selectedStation) {
     return (
       <RetroWindow title="Station">
-        <p className={styles.placeholder}>Click a dot on the map to select a station.</p>
+        {viewAllDepartures ? (
+          <p className={styles.placeholder}>
+            Showing all departures. Pick a stop on the map to see details for one station.
+          </p>
+        ) : (
+          <p className={styles.placeholder}>Click a dot on the map to select a station.</p>
+        )}
       </RetroWindow>
     );
   }

@@ -68,7 +68,7 @@
 }
 
 .navLink:hover {
-  color: var(--poster-cyan);
+  color: var(--color-sand);
   text-decoration: none;
 }
 

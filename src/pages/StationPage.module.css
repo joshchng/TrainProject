@@ -7,7 +7,7 @@
 
 .header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--space-4);
   margin-bottom: var(--space-3);
 }
@@ -71,4 +71,10 @@
 
 .col {
   min-width: 0;
+}
+
+.departuresStack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 }

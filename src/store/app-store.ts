@@ -6,10 +6,13 @@ export type DirectionFilter = 'all' | 'North' | 'South';
 
 interface AppState {
   selectedStation: string | null;
+  /** When true, the departures panel lists all departures (every station; map selection cleared). */
+  viewAllDepartures: boolean;
   activeLines: Set<string>;
   directionFilter: DirectionFilter;
 
   selectStation: (abbr: string | null) => void;
+  showAllStationsDepartures: () => void;
   toggleLine: (line: string) => void;
   setAllLines: (active: boolean) => void;
   setDirection: (dir: DirectionFilter) => void;
@@ -17,10 +20,13 @@ interface AppState {
 
 export const useAppStore = create<AppState>((set) => ({
   selectedStation: null,
+  viewAllDepartures: false,
   activeLines: new Set(ALL_LINES),
   directionFilter: 'all',
 
-  selectStation: (abbr) => set({ selectedStation: abbr }),
+  selectStation: (abbr) => set({ selectedStation: abbr, viewAllDepartures: false }),
+
+  showAllStationsDepartures: () => set({ selectedStation: null, viewAllDepartures: true }),
 
   toggleLine: (line) =>
     set((state) => {

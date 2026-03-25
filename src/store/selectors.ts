@@ -19,15 +19,29 @@ export interface FlatDeparture {
   hexcolor: string;
   bikeflag: boolean;
   delay: number;
+  /** Set when merging system-wide ETDs so rows can show originating station. */
+  originAbbr?: string;
+  originName?: string;
 }
 
-export function filterDepartures(
-  etd: ETDResponse | undefined,
+function sortFlatDepartures(flat: FlatDeparture[]): FlatDeparture[] {
+  flat.sort((a, b) => {
+    const aMin = a.minutes === 'Leaving' ? 0 : a.minutes;
+    const bMin = b.minutes === 'Leaving' ? 0 : b.minutes;
+    if (aMin !== bMin) return aMin - bMin;
+    const oa = a.originAbbr ?? '';
+    const ob = b.originAbbr ?? '';
+    return oa.localeCompare(ob);
+  });
+  return flat;
+}
+
+function flatDeparturesForStation(
+  etd: ETDResponse,
   activeLines: Set<string>,
   directionFilter: DirectionFilter,
+  withOrigin: boolean,
 ): FlatDeparture[] {
-  if (!etd) return [];
-
   const flat: FlatDeparture[] = [];
 
   for (const dest of etd.destinations) {
@@ -46,15 +60,34 @@ export function filterDepartures(
         hexcolor: est.hexcolor,
         bikeflag: est.bikeflag,
         delay: est.delay,
+        ...(withOrigin
+          ? { originAbbr: etd.stationAbbr, originName: etd.stationName }
+          : {}),
       });
     }
   }
 
-  flat.sort((a, b) => {
-    const aMin = a.minutes === 'Leaving' ? 0 : a.minutes;
-    const bMin = b.minutes === 'Leaving' ? 0 : b.minutes;
-    return aMin - bMin;
-  });
-
   return flat;
+}
+
+export function filterDepartures(
+  etd: ETDResponse | undefined,
+  activeLines: Set<string>,
+  directionFilter: DirectionFilter,
+): FlatDeparture[] {
+  if (!etd) return [];
+  return sortFlatDepartures(flatDeparturesForStation(etd, activeLines, directionFilter, false));
+}
+
+export function filterAllStationsDepartures(
+  etds: ETDResponse[] | undefined,
+  activeLines: Set<string>,
+  directionFilter: DirectionFilter,
+): FlatDeparture[] {
+  if (!etds?.length) return [];
+  const flat: FlatDeparture[] = [];
+  for (const etd of etds) {
+    flat.push(...flatDeparturesForStation(etd, activeLines, directionFilter, true));
+  }
+  return sortFlatDepartures(flat);
 }

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAppStore } from '@/store/app-store';
 import { useAllDepartures } from '@/api/hooks';
 import {
@@ -10,16 +10,22 @@ import {
   type LinePath,
 } from './map-data';
 import { getStationTrains, type TrainAtStation } from './station-trains';
+import { interpolateTrainPosition } from './train-interpolation';
+import { RetroButton } from '@/components/chrome/RetroButton';
 import { StationAbbrev, StationDotBody } from './StationDot';
 import { TrainMarker } from './TrainMarker';
 import styles from './Map.module.css';
 
-const FAN_RADIUS = 23;
+const TICK_INTERVAL_MS = 500;
+
+/** Trains within this many (adjusted) minutes of a station use the fan-out. */
+const NEAR_STATION_MIN = 0.5;
+const FAN_RADIUS = 20;
 
 /**
  * Arranges N train markers in a ring around a station center so they
- * don't stack on top of each other. The first positions point away from
- * the station label so dots don't cover abbreviations (e.g. NCON).
+ * don't stack on top of each other. Positions point away from the station
+ * label so dots don't cover abbreviations.
  */
 function fanOutPosition(
   cx: number,
@@ -29,8 +35,7 @@ function fanOutPosition(
 ): { x: number; y: number } {
   const labelLeft = stationLabelAnchoredLeft(cx);
   if (total === 1) {
-    const x = labelLeft ? cx + FAN_RADIUS : cx - FAN_RADIUS;
-    return { x, y: cy };
+    return { x: labelLeft ? cx + FAN_RADIUS : cx - FAN_RADIUS, y: cy };
   }
   const baseAngle = labelLeft ? 0 : Math.PI;
   const angle = baseAngle + (2 * Math.PI * index) / total;
@@ -47,8 +52,10 @@ interface SystemMapProps {
 
 export function SystemMap({ fillHeight = false }: SystemMapProps) {
   const selectedStation = useAppStore((s) => s.selectedStation);
+  const viewAllDepartures = useAppStore((s) => s.viewAllDepartures);
   const activeLines = useAppStore((s) => s.activeLines);
   const selectStation = useAppStore((s) => s.selectStation);
+  const showAllStationsDepartures = useAppStore((s) => s.showAllStationsDepartures);
 
   const { data: allETDs } = useAllDepartures();
 
@@ -69,34 +76,92 @@ export function SystemMap({ fillHeight = false }: SystemMapProps) {
     [trains, activeLines],
   );
 
-  // Group trains by station for fan-out and count badge
-  const trainsByStation = useMemo(() => {
-    const map = new Map<string, TrainAtStation[]>();
-    for (const t of visibleTrains) {
-      let arr = map.get(t.stationAbbr);
-      if (!arr) {
-        arr = [];
-        map.set(t.stationAbbr, arr);
-      }
-      arr.push(t);
-    }
-    return map;
-  }, [visibleTrains]);
+  // Track when ETD data was fetched so we can count down minutes in real time
+  const fetchedAtRef = useRef(Date.now());
+  useEffect(() => {
+    if (allETDs) fetchedAtRef.current = Date.now();
+  }, [allETDs]);
 
-  const { width: vbW, height: vbH } = MAP_VIEWBOX;
+  // Animation tick — increments every ~2s to re-render with updated elapsed time
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), TICK_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, []);
+
+  // Hybrid positioning: fan-out at stations, interpolation in transit.
+  // Trains near a station (adjustedMin < threshold) get the organized ring
+  // layout; trains between stations glide along their line path.
+  const trainPositions = useMemo(() => {
+    const elapsedMin = (Date.now() - fetchedAtRef.current) / 60_000;
+
+    const withAdjusted = visibleTrains.map((train) => ({
+      train,
+      adjusted: Math.max(0, train.minutes - elapsedMin),
+    }));
+
+    // Bucket trains near a station for fan-out
+    const atStation = new Map<string, TrainAtStation[]>();
+    const inTransit: { train: TrainAtStation; adjusted: number }[] = [];
+
+    for (const item of withAdjusted) {
+      if (item.adjusted < NEAR_STATION_MIN) {
+        const arr = atStation.get(item.train.stationAbbr) ?? [];
+        arr.push(item.train);
+        atStation.set(item.train.stationAbbr, arr);
+      } else {
+        inTransit.push(item);
+      }
+    }
+
+    const result: { train: TrainAtStation; x: number; y: number }[] = [];
+
+    // At-station trains: organized fan-out ring
+    for (const [abbr, group] of atStation) {
+      const st = STATION_MAP.get(abbr);
+      if (!st) continue;
+      for (let i = 0; i < group.length; i++) {
+        const pos = fanOutPosition(st.x, st.y, i, group.length);
+        result.push({ train: group[i], ...pos });
+      }
+    }
+
+    // In-transit trains: interpolated along line path
+    for (const { train, adjusted } of inTransit) {
+      const pos = interpolateTrainPosition(train, adjusted);
+      result.push({ train, ...pos });
+    }
+
+    return result;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visibleTrains, tick]);
+
+  const { minX: vbX, minY: vbY, width: vbW, height: vbH } = MAP_VIEWBOX;
 
   const [hoveredAbbr, setHoveredAbbr] = useState<string | null>(null);
 
   return (
     <div className={`${styles.mapContainer} ${fillHeight ? styles.mapContainerFill : ''}`}>
+      <div className={styles.mapToolbar}>
+        <RetroButton
+          type="button"
+          variant="small"
+          active={viewAllDepartures}
+          className={styles.mapAllStationsBtn}
+          aria-pressed={viewAllDepartures}
+          onClick={() => showAllStationsDepartures()}
+        >
+          All departures
+        </RetroButton>
+      </div>
       <svg
-        viewBox={`0 0 ${vbW} ${vbH}`}
+        viewBox={`${vbX} ${vbY} ${vbW} ${vbH}`}
         className={styles.mapSvg}
         preserveAspectRatio="xMidYMid meet"
         role="img"
         aria-label="BART system map with live train positions"
       >
-        <rect width={vbW} height={vbH} className={styles.mapBackground} />
+        <rect x={vbX} y={vbY} width={vbW} height={vbH} className={styles.mapBackground} />
 
         {/* Line paths — drawn first so stations render on top */}
         {visiblePaths.map((lp: LinePath) => (
@@ -111,24 +176,7 @@ export function SystemMap({ fillHeight = false }: SystemMapProps) {
           />
         ))}
 
-        {/* Train markers — under stations so labels stay readable */}
-        {Array.from(trainsByStation.entries()).map(([stAbbr, stTrains]) => {
-          const station = STATION_MAP.get(stAbbr);
-          if (!station) return null;
-          return stTrains.map((train, idx) => {
-            const pos = fanOutPosition(station.x, station.y, idx, stTrains.length);
-            return (
-              <TrainMarker
-                key={train.id}
-                cx={pos.x}
-                cy={pos.y}
-                color={train.hexcolor}
-              />
-            );
-          });
-        })}
-
-        {/* Station squares — under global label layer */}
+        {/* Station squares — under trains and labels */}
         {STATIONS.map((station) => (
           <StationDotBody
             key={station.abbr}
@@ -138,6 +186,16 @@ export function SystemMap({ fillHeight = false }: SystemMapProps) {
             onSelect={selectStation}
             onPointerEnter={() => setHoveredAbbr(station.abbr)}
             onPointerLeave={() => setHoveredAbbr(null)}
+          />
+        ))}
+
+        {/* Train markers — on top of stations so dots are visible at/near stations */}
+        {trainPositions.map(({ train, x, y }) => (
+          <TrainMarker
+            key={train.id}
+            cx={x}
+            cy={y}
+            color={train.hexcolor}
           />
         ))}
 

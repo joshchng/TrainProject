@@ -11,9 +11,9 @@ export function RetroHeader() {
         </div>
       </Link>
       <nav className={styles.nav}>
-        <Link to="/" className={styles.navLink}>Map</Link>
-        <span className={styles.navRule} aria-hidden />
-        <Link to="/about" className={styles.navLink}>About</Link>
+        <Link to="/map" className={styles.navLink}>
+          Map
+        </Link>
       </nav>
     </header>
   );

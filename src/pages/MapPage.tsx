@@ -5,9 +5,9 @@ import { DepartureBoard } from '@/components/panels/DepartureBoard';
 import { TrainCount } from '@/components/panels/TrainCount';
 import { LineFilter } from '@/components/filters/LineFilter';
 import { DirectionFilter } from '@/components/filters/DirectionFilter';
-import styles from './Home.module.css';
+import styles from './MapPage.module.css';
 
-export function Home() {
+export function MapPage() {
   return (
     <div className={styles.page}>
       <AlertTicker />

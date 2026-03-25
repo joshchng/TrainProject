@@ -1,9 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { RetroFooter } from '@/components/chrome/RetroFooter';
 import { RetroHeader } from '@/components/chrome/RetroHeader';
 import { About } from '@/pages/About';
-import { Home } from '@/pages/Home';
+import { MapPage } from '@/pages/MapPage';
 import { StationPage } from '@/pages/StationPage';
 import styles from './App.module.css';
 
@@ -24,9 +24,10 @@ export default function App() {
           <RetroHeader />
           <main className={styles.main}>
             <Routes>
-              <Route path="/" element={<Home />} />
+              <Route path="/" element={<About />} />
+              <Route path="/map" element={<MapPage />} />
               <Route path="/station/:abbr" element={<StationPage />} />
-              <Route path="/about" element={<About />} />
+              <Route path="/about" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
           <RetroFooter />

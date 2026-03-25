@@ -17,6 +17,9 @@
   --color-warm-black: var(--color-soil);
   --color-alert-red: #c24a4a;
   --color-bart-blue: #0099d8;
+  --color-earth-green-cta: #3d493b;
+  --color-earth-green-cta-hover: #4d5f49;
+  --color-earth-green-link: #b0cdb0;
 
   /* Aliases for existing token names */
   --color-carpet-brown: var(--color-walnut);

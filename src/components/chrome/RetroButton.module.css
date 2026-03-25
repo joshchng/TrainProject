@@ -39,3 +39,36 @@
   padding-top: var(--space-1);
   padding-left: var(--space-3);
 }
+
+/* Station / map “back” control: matches display typography, stable hit target */
+.back {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-4);
+  min-height: 2.75rem;
+  border-radius: var(--radius-md);
+  background-color: var(--bg-panel-content);
+  border: var(--border-width) solid var(--border-panel);
+  box-shadow: inset 0 1px 0 rgba(201, 184, 150, 0.12);
+  flex-shrink: 0;
+}
+
+.back:hover {
+  background-color: rgba(44, 40, 34, 0.95);
+  border-color: var(--border-accent);
+  color: var(--color-parchment);
+}
+
+.back:active,
+.back.active {
+  background-color: rgba(35, 30, 25, 0.95);
+  border-color: var(--color-fern);
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.2);
+}

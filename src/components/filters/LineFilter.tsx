@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { useAppStore } from '@/store/app-store';
 import { LINE_KEYS, LINES } from '@/utils/lines';
 import { RetroWindow } from '@/components/chrome/RetroWindow';
@@ -22,16 +23,19 @@ export function LineFilter({ compact = false }: LineFilterProps) {
           const on = activeLines.has(key);
           return (
             <li key={key}>
-              <label className={styles.row}>
-                <input
-                  type="checkbox"
-                  className={styles.checkbox}
-                  checked={on}
-                  onChange={() => toggleLine(key)}
-                />
+              <button
+                type="button"
+                className={`${styles.row} ${on ? styles.rowOn : styles.rowOff}`}
+                style={{ '--line-accent': info.hexcolor } as CSSProperties}
+                onClick={() => toggleLine(key)}
+                aria-pressed={on}
+              >
+                <span className={styles.indicator} aria-hidden>
+                  {on ? '[*]' : '[ ]'}
+                </span>
                 <span className={styles.swatch} style={{ backgroundColor: info.hexcolor }} />
                 <span className={styles.name}>{info.name}</span>
-              </label>
+              </button>
             </li>
           );
         })}
