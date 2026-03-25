@@ -3,6 +3,9 @@ body {
   font-family: var(--font-ui);
   font-size: var(--text-base);
   line-height: 1.5;
+  /* Wrap at word boundaries; break only when a token would overflow (no horizontal spill). */
+  overflow-wrap: break-word;
+  word-break: normal;
   color: var(--text-primary);
   background-color: var(--surface-page);
   background-image:

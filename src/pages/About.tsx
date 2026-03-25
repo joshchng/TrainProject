@@ -1,16 +1,23 @@
 import { Link } from 'react-router-dom';
+import { BartMonogram } from '@/components/chrome/BartMonogram';
 import { PixelDivider } from '@/components/chrome/PixelDivider';
 import styles from './About.module.css';
 
 export function About() {
   return (
     <div className={styles.page}>
-      <h1 className={styles.title}>BART Tracker</h1>
-      <p className={styles.lead}>
-        A retro-styled dashboard for following Bay Area Rapid Transit in near real time: system map, departure
-        estimates, service alerts, and per-station detail. This site is an independent project and is not affiliated
-        with BART.
-      </p>
+      <div className={styles.bartMarkWrap}>
+        <BartMonogram className={styles.bartMark} />
+      </div>
+      <header className={styles.hero}>
+        <h1 className={styles.title}>BART Tracker</h1>
+        <p className={styles.lead}>
+          Retro dashboard for live BART data
+        </p>
+        <p className={styles.lead}>
+          [INDEPENDENT PROJECT] not affiliated with BART
+        </p>
+      </header>
 
       <div className={styles.ctaRow}>
         <Link to="/map" className={styles.cta}>
@@ -20,22 +27,31 @@ export function About() {
 
       <PixelDivider />
 
+      <section className={styles.section} aria-labelledby="about-motivation">
+        <h2 id="about-motivation" className={styles.h2}>
+          Motivation
+        </h2>
+        <p className={styles.p}>
+          This is a passion project I've been wanting to build for a while. I love riding BART, and I wanted it to feel
+          like you're in a train controller's seat watching the status of every train in the system.
+        </p>
+      </section>
+
+      <PixelDivider />
+
       <section className={styles.section} aria-labelledby="about-features">
         <h2 id="about-features" className={styles.h2}>
-          What you can do here
+          Features
         </h2>
         <ul className={styles.featureList}>
           <li>
-            <strong>Explore the map</strong> — see stations and trains, filter by line or direction, and select a stop
-            to load its departures and details in the side panels.
+            <strong>Map</strong> — stations, trains, line/direction filters, and side panels for the selected stop.
           </li>
           <li>
-            <strong>Read the alert ticker</strong> — advisories and service changes from BART roll across the top on the
-            map view so you can spot delays without digging through a separate feed.
+            <strong>Alerts</strong> — ticker on the map for advisories and service changes.
           </li>
           <li>
-            <strong>Open a station page</strong> — each stop has a focused view with departure boards and elevator /
-            escalator status when you follow a deep link from the map.
+            <strong>Station pages</strong> — departures and elevator/escalator status (deep links from the map).
           </li>
         </ul>
       </section>
@@ -44,22 +60,21 @@ export function About() {
 
       <section className={styles.section} aria-labelledby="about-data">
         <h2 id="about-data" className={styles.h2}>
-          Data source and accuracy
+          Data
         </h2>
         <p className={styles.p}>
-          Schedules and vehicle positions come from the public{' '}
+          Schedules, train positions, advisories, all of it comes straight from BART's public{' '}
           <a href="https://api.bart.gov/docs/overview/index.aspx" target="_blank" rel="noreferrer">
             BART API
           </a>
-          . ETAs and train counts can drift during disruptions, GPS quirks, or API maintenance; treat everything as a
-          best-effort snapshot, not a guarantee of service.
+          . Most of the time it matches what you see on the platform, but it may have delays, GPS glitches, or the API just hiccups for a bit.  
         </p>
         <p className={styles.p}>
-          If something looks wrong, cross-check{' '}
+          If a departure time looks wrong or the map's doing something weird, it's worth a quick look at{' '}
           <a href="https://www.bart.gov/" target="_blank" rel="noreferrer">
             bart.gov
           </a>{' '}
-          or platform signage — this app only reflects what the API reports at refresh time.
+          or the signs at the station before you commit to a mad dash across the platform.
         </p>
       </section>
 
@@ -70,9 +85,13 @@ export function About() {
           Privacy
         </h2>
         <p className={styles.p}>
-          There are no accounts and no deliberate tracking layer in this codebase: your browser talks to the same BART
-          data endpoints the map needs. Network operators and hosting providers may still see routine traffic as with
-          any website.
+          There's no login and no ad trackers baked into this project. The app mostly just asks BART for the same kinds
+          of things the map and boards need, nothing sneaky on top of that.
+        </p>
+        <p className={styles.p}>
+          Your phone carrier, your Wi-Fi, and whoever's hosting the site can still see that you loaded a page—that's
+          normal for any website, and this one doesn't pretend to be a privacy shield. The goal is simply not to layer
+          extra data collection on you beyond what fetching train times already implies.
         </p>
       </section>
 
@@ -80,7 +99,7 @@ export function About() {
 
       <section className={styles.section} aria-labelledby="about-stack">
         <h2 id="about-stack" className={styles.h2}>
-          Built with
+          Stack
         </h2>
         <dl className={styles.defList}>
           <div>
@@ -88,12 +107,12 @@ export function About() {
             <dd>React, Vite, CSS modules, Framer Motion</dd>
           </div>
           <div>
-            <dt>Data layer</dt>
-            <dd>TanStack Query, BART API (via the app’s HTTP client)</dd>
+            <dt>Data</dt>
+            <dd>TanStack Query, BART API</dd>
           </div>
           <div>
-            <dt>Client state</dt>
-            <dd>Zustand (selected station and UI-related map state)</dd>
+            <dt>State</dt>
+            <dd>Zustand (map + selection)</dd>
           </div>
         </dl>
       </section>
@@ -102,8 +121,8 @@ export function About() {
 
       <footer className={styles.footer}>
         <p>
-          <strong>Disclaimer:</strong> “BART,” station names, and related marks belong to Bay Area Rapid Transit. This
-          project is unofficial fan / educational software offered as-is, without warranty.
+          <strong>Disclaimer:</strong> BART names and marks belong to Bay Area Rapid Transit. Unofficial hobby project;
+          as-is, no warranty.
         </p>
       </footer>
     </div>

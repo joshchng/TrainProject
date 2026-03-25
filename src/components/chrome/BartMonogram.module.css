@@ -1,0 +1,21 @@
+.svg {
+  display: block;
+  flex-shrink: 0;
+  width: 5.5rem;
+  height: auto;
+  filter: drop-shadow(1px 1px 0 var(--border-subtle));
+}
+
+.letterB {
+  fill: var(--color-parchment);
+}
+
+.letterA {
+  fill: var(--poster-cyan);
+}
+
+@media (min-width: 520px) {
+  .svg {
+    width: 6.25rem;
+  }
+}

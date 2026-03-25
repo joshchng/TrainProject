@@ -5,6 +5,17 @@
   margin: 0 auto;
 }
 
+.bartMarkWrap {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: var(--space-5);
+}
+
+.hero {
+  margin-bottom: var(--space-2);
+}
+
 .title {
   font-family: var(--font-display);
   font-size: var(--text-3xl);
@@ -19,6 +30,14 @@
   font-size: var(--text-base);
   color: var(--text-secondary);
   line-height: 1.65;
+  margin-bottom: var(--space-4);
+}
+
+.leadDisclaimer {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: 1.55;
   margin-bottom: var(--space-5);
 }
 
