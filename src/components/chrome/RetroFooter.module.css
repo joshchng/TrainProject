@@ -4,7 +4,15 @@
   justify-content: space-between;
   min-height: var(--footer-height);
   padding: var(--space-2) var(--space-4);
-  background: var(--surface-card);
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 47px,
+      rgba(0, 174, 239, 0.06) 47px,
+      rgba(0, 174, 239, 0.06) 48px
+    ),
+    var(--surface-card);
   border-top: var(--border-hairline) solid var(--border-subtle);
   font-family: var(--font-ui);
   font-size: var(--text-xs);

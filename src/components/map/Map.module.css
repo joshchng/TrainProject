@@ -1,9 +1,13 @@
 .mapContainer {
+  --map-bg: #161412;
+  --map-stroke: #0e0c0a;
+
   width: 100%;
-  background-color: var(--bg-panel-content);
-  border: var(--border-hairline) solid var(--border-subtle);
+  background-color: var(--map-bg);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: var(--radius-card);
   overflow: hidden;
+  box-shadow: 0 0 14px rgba(0, 0, 0, 0.4);
 }
 
 .mapSvg {
@@ -12,14 +16,84 @@
   display: block;
 }
 
-.linePath {
-  transition: stroke-opacity 0.3s ease;
+.mapBackground {
+  fill: var(--map-bg);
 }
+
+/* ---- Line segments ---- */
+
+.lineSegment {
+  stroke-linecap: round;
+  opacity: 0.85;
+}
+
+/* ---- Station dots ---- */
 
 .stationGroup {
-  transition: transform 0.15s ease;
+  cursor: pointer;
 }
 
-.trainBlip {
+.stationGroup:hover .stationDot {
+  fill: #E0E6F0;
+}
+
+.stationDot {
+  fill: #C8CDD8;
+  stroke: var(--map-stroke);
+  stroke-width: 3;
+  transition: fill 0.15s ease;
+}
+
+.stationDotSelected {
+  fill: #00AEEF;
+  stroke: var(--map-stroke);
+  stroke-width: 3;
+}
+
+/* ---- Station labels ---- */
+
+.stationLabel {
+  fill: #e4e8f0;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-ui, 'Menlo', monospace);
+  letter-spacing: 0.02em;
+  /* Halo so labels stay readable over line colors */
+  stroke: var(--map-bg);
+  stroke-width: 5px;
+  stroke-linejoin: round;
+  paint-order: stroke fill;
   pointer-events: none;
+  user-select: none;
+}
+
+.stationGroup:hover .stationLabel {
+  fill: #ffffff;
+}
+
+/* ---- Train count badge ---- */
+
+.trainCountBadge {
+  fill: #22201c;
+  stroke: #00AEEF;
+  stroke-width: 1;
+}
+
+.trainCountText {
+  fill: #00AEEF;
+  font-size: 8px;
+  font-family: var(--font-ui, 'Menlo', monospace);
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+
+/* ---- Train markers ---- */
+
+.trainMarker {
+  pointer-events: none;
+}
+
+.trainDotOutline {
+  stroke: var(--map-stroke);
 }

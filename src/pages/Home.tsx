@@ -16,11 +16,17 @@ export function Home() {
           <SystemMap />
         </section>
         <aside className={styles.sidebar}>
-          <StationInfo />
-          <DepartureBoard />
-          <TrainCount />
-          <LineFilter />
-          <DirectionFilter />
+          <div className={styles.sidebarIntro}>
+            <StationInfo />
+          </div>
+          <div className={styles.sidebarDepartures}>
+            <DepartureBoard fillHeight />
+          </div>
+          <div className={styles.sidebarTools}>
+            <TrainCount />
+            <LineFilter />
+            <DirectionFilter />
+          </div>
         </aside>
       </div>
     </div>

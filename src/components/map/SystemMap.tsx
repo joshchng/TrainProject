@@ -1,12 +1,37 @@
 import { useMemo } from 'react';
 import { useAppStore } from '@/store/app-store';
 import { useAllDepartures } from '@/api/hooks';
-import { STATIONS, LINES, OAK_CONNECTOR, STATION_MAP } from './map-data';
-import { interpolateTrains } from './train-interpolation';
-import { LinePath } from './LinePath';
+import {
+  STATIONS,
+  STATION_MAP,
+  MAP_VIEWBOX,
+  computeAllLineSegments,
+  type OffsetSegment,
+} from './map-data';
+import { getStationTrains, type TrainAtStation } from './station-trains';
 import { StationDot } from './StationDot';
-import { TrainBlip } from './TrainBlip';
+import { TrainMarker } from './TrainMarker';
 import styles from './Map.module.css';
+
+const FAN_RADIUS = 23;
+
+/**
+ * Arranges N train markers in a ring around a station center so they
+ * don't stack on top of each other.
+ */
+function fanOutPosition(
+  cx: number,
+  cy: number,
+  index: number,
+  total: number,
+): { x: number; y: number } {
+  if (total === 1) return { x: cx + FAN_RADIUS, y: cy };
+  const angle = (2 * Math.PI * index) / total - Math.PI / 2;
+  return {
+    x: cx + Math.cos(angle) * FAN_RADIUS,
+    y: cy + Math.sin(angle) * FAN_RADIUS,
+  };
+}
 
 export function SystemMap() {
   const selectedStation = useAppStore((s) => s.selectedStation);
@@ -15,8 +40,15 @@ export function SystemMap() {
 
   const { data: allETDs } = useAllDepartures();
 
+  const allSegments = useMemo(() => computeAllLineSegments(), []);
+
+  const visibleSegments = useMemo(
+    () => allSegments.filter((seg) => activeLines.has(seg.lineColor)),
+    [allSegments, activeLines],
+  );
+
   const trains = useMemo(
-    () => (allETDs ? interpolateTrains(allETDs) : []),
+    () => (allETDs ? getStationTrains(allETDs) : []),
     [allETDs],
   );
 
@@ -25,50 +57,48 @@ export function SystemMap() {
     [trains, activeLines],
   );
 
-  const oakFrom = STATION_MAP.get(OAK_CONNECTOR.from);
-  const oakTo = STATION_MAP.get(OAK_CONNECTOR.to);
+  // Group trains by station for fan-out and count badge
+  const trainsByStation = useMemo(() => {
+    const map = new Map<string, TrainAtStation[]>();
+    for (const t of visibleTrains) {
+      let arr = map.get(t.stationAbbr);
+      if (!arr) {
+        arr = [];
+        map.set(t.stationAbbr, arr);
+      }
+      arr.push(t);
+    }
+    return map;
+  }, [visibleTrains]);
+
+  const { width: vbW, height: vbH } = MAP_VIEWBOX;
 
   return (
     <div className={styles.mapContainer}>
       <svg
-        viewBox="0 0 800 620"
+        viewBox={`0 0 ${vbW} ${vbH}`}
         className={styles.mapSvg}
         preserveAspectRatio="xMidYMid meet"
+        role="img"
+        aria-label="BART system map with live train positions"
       >
-        {/* Line paths (render behind everything) */}
-        {LINES.map((line) => (
-          <LinePath
-            key={line.color}
-            line={line}
-            active={activeLines.has(line.color)}
-          />
-        ))}
+        <rect width={vbW} height={vbH} className={styles.mapBackground} />
 
-        {/* Oakland Airport connector */}
-        {oakFrom && oakTo && (
+        {/* Line segments — drawn first so stations render on top */}
+        {visibleSegments.map((seg: OffsetSegment) => (
           <line
-            x1={oakFrom.x}
-            y1={oakFrom.y}
-            x2={oakTo.x}
-            y2={oakTo.y}
-            stroke={OAK_CONNECTOR.color}
-            strokeWidth={2}
-            strokeDasharray="4 3"
-            opacity={0.6}
-          />
-        )}
-
-        {/* Train blips (on top of lines, behind station dots) */}
-        {visibleTrains.map((train) => (
-          <TrainBlip
-            key={train.id}
-            x={train.x}
-            y={train.y}
-            color={train.hexcolor}
+            key={`${seg.lineColor}-${seg.fromAbbr}-${seg.toAbbr}`}
+            x1={seg.x1}
+            y1={seg.y1}
+            x2={seg.x2}
+            y2={seg.y2}
+            stroke={seg.hexcolor}
+            strokeWidth={3.5}
+            className={styles.lineSegment}
           />
         ))}
 
-        {/* Station dots (top layer) */}
+        {/* Station dots */}
         {STATIONS.map((station) => (
           <StationDot
             key={station.abbr}
@@ -77,6 +107,23 @@ export function SystemMap() {
             onSelect={selectStation}
           />
         ))}
+
+        {/* Train markers — fanned out around their station */}
+        {Array.from(trainsByStation.entries()).map(([stAbbr, stTrains]) => {
+          const station = STATION_MAP.get(stAbbr);
+          if (!station) return null;
+          return stTrains.map((train, idx) => {
+            const pos = fanOutPosition(station.x, station.y, idx, stTrains.length);
+            return (
+              <TrainMarker
+                key={train.id}
+                cx={pos.x}
+                cy={pos.y}
+                color={train.hexcolor}
+              />
+            );
+          });
+        })}
       </svg>
     </div>
   );

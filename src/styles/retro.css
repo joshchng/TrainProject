@@ -20,7 +20,44 @@ body {
       transparent 2px,
       rgba(42, 51, 40, 0.06) 2px,
       rgba(42, 51, 40, 0.06) 4px
+    ),
+    /* Hint of poster “horizon”: soft cream + deep blue wash at bottom */
+    linear-gradient(
+      180deg,
+      transparent 0%,
+      transparent 62%,
+      var(--poster-cream-glow) 78%,
+      rgba(6, 10, 74, 0.14) 100%
     );
+}
+
+/* Subtle poster-style grid only in lower viewport (does not replace earth base) */
+body::before {
+  content: '';
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 55vh;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.22;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 24px,
+      rgba(0, 174, 239, 0.35) 24px,
+      rgba(0, 174, 239, 0.35) 25px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 56px,
+      rgba(0, 174, 239, 0.2) 56px,
+      rgba(0, 174, 239, 0.2) 57px
+    );
+  mask-image: linear-gradient(180deg, transparent, black 25%);
 }
 
 /* Subtle CRT-style horizontal scanlines */
@@ -41,6 +78,8 @@ body::after {
 }
 
 #root {
+  position: relative;
+  z-index: 1;
   max-width: min(var(--max-width), 100%);
   margin: 0 auto;
   padding: 0 clamp(var(--space-3), 4vw, var(--space-8));

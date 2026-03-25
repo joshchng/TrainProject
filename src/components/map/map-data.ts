@@ -13,93 +13,80 @@ export interface MapLine {
 }
 
 /*
- * Topological coordinates modeled on the official BART schematic
- * (vertical / horizontal / 45° only). ViewBox 800×620.
- *
- * Richmond (NW) + Antioch (NE) → Oakland spine → 12th wye
- * (45° to West Oakland / Lake Merritt) → horizontal Transbay
- * → vertical downtown SF → 45° southwest toward Daly / Peninsula.
+ * Station x,y are pixel coordinates in the SVG viewBox coordinate space
+ * (1024x928). Hand-tuned to the official BART schematic layout.
  */
 
-/** Per-line nudge so parallel strokes on shared corridors read like the official map. */
-export const LINE_PATH_NUDGE: Record<string, [number, number]> = {
-  YELLOW: [0, -3.5],
-  RED: [-3, -1],
-  ORANGE: [3.5, 0],
-  GREEN: [0, 3.5],
-  BLUE: [-3.5, 1],
-};
+export const MAP_VIEWBOX = { width: 1024, height: 928 } as const;
 
 export const STATIONS: MapStation[] = [
-  // Richmond branch (northwest column → MacArthur)
-  { abbr: 'RICH', name: 'Richmond', x: 338, y: 30 },
-  { abbr: 'DELN', name: 'El Cerrito del Norte', x: 338, y: 52 },
-  { abbr: 'PLZA', name: 'El Cerrito Plaza', x: 338, y: 74 },
-  { abbr: 'NBRK', name: 'North Berkeley', x: 338, y: 96 },
-  { abbr: 'DBRK', name: 'Downtown Berkeley', x: 338, y: 118 },
-  { abbr: 'ASHB', name: 'Ashby', x: 338, y: 142 },
+  // Richmond branch → MacArthur (~36px apart)
+  { abbr: 'RICH', name: 'Richmond', x: 278, y: 68 },
+  { abbr: 'DELN', name: 'El Cerrito del Norte', x: 278, y: 104 },
+  { abbr: 'PLZA', name: 'El Cerrito Plaza', x: 278, y: 140 },
+  { abbr: 'NBRK', name: 'North Berkeley', x: 280, y: 176 },
+  { abbr: 'DBRK', name: 'Downtown Berkeley', x: 286, y: 212 },
+  { abbr: 'ASHB', name: 'Ashby', x: 296, y: 248 },
 
-  // Antioch branch (northeast → Rockridge → MacArthur)
-  { abbr: 'ANTC', name: 'Antioch', x: 712, y: 32 },
-  { abbr: 'PCTR', name: 'Pittsburg Center', x: 678, y: 50 },
-  { abbr: 'PITT', name: 'Pittsburg/Bay Point', x: 645, y: 68 },
-  { abbr: 'NCON', name: 'North Concord/Martinez', x: 612, y: 88 },
-  { abbr: 'CONC', name: 'Concord', x: 578, y: 108 },
-  { abbr: 'PHIL', name: 'Pleasant Hill', x: 548, y: 126 },
-  { abbr: 'WCRK', name: 'Walnut Creek', x: 518, y: 144 },
-  { abbr: 'LAFY', name: 'Lafayette', x: 492, y: 158 },
-  { abbr: 'ORIN', name: 'Orinda', x: 468, y: 172 },
-  { abbr: 'ROCK', name: 'Rockridge', x: 498, y: 188 },
+  // Antioch branch → Rockridge → MacArthur (compressed so ORIN–ROCK is ~110px, not ~280px)
+  { abbr: 'ANTC', name: 'Antioch', x: 866, y: 44 },
+  { abbr: 'PCTR', name: 'Pittsburg Center', x: 830, y: 70 },
+  { abbr: 'PITT', name: 'Pittsburg/Bay Point', x: 794, y: 96 },
+  { abbr: 'NCON', name: 'North Concord/Martinez', x: 758, y: 122 },
+  { abbr: 'CONC', name: 'Concord', x: 722, y: 148 },
+  { abbr: 'PHIL', name: 'Pleasant Hill', x: 686, y: 174 },
+  { abbr: 'WCRK', name: 'Walnut Creek', x: 650, y: 200 },
+  { abbr: 'LAFY', name: 'Lafayette', x: 614, y: 224 },
+  { abbr: 'ORIN', name: 'Orinda', x: 540, y: 246 },
+  { abbr: 'ROCK', name: 'Rockridge', x: 434, y: 264 },
 
-  // Oakland spine (shared vertical)
-  { abbr: 'MCAR', name: 'MacArthur', x: 410, y: 188 },
-  { abbr: '19TH', name: '19th St Oakland', x: 410, y: 218 },
-  { abbr: '12TH', name: '12th St Oakland City Center', x: 410, y: 248 },
+  // Oakland spine (~44px apart)
+  { abbr: 'MCAR', name: 'MacArthur', x: 368, y: 280 },
+  { abbr: '19TH', name: '19th St Oakland', x: 394, y: 316 },
+  { abbr: '12TH', name: '12th St Oakland City Center', x: 420, y: 352 },
 
-  // 12th wye (45°) + transbay band (y = 333)
-  { abbr: 'WOAK', name: 'West Oakland', x: 325, y: 333 },
-  { abbr: 'LAKE', name: 'Lake Merritt', x: 495, y: 333 },
+  // 12th St wye / Transbay level
+  { abbr: 'WOAK', name: 'West Oakland', x: 306, y: 396 },
+  { abbr: 'LAKE', name: 'Lake Merritt', x: 524, y: 396 },
 
-  // San Francisco + transbay west end
-  { abbr: 'EMBR', name: 'Embarcadero', x: 185, y: 333 },
-  { abbr: 'MONT', name: 'Montgomery St', x: 185, y: 354 },
-  { abbr: 'POWL', name: 'Powell St', x: 185, y: 375 },
-  { abbr: 'CIVC', name: 'Civic Center/UN Plaza', x: 185, y: 396 },
-  { abbr: '16TH', name: '16th St Mission', x: 185, y: 417 },
-  { abbr: '24TH', name: '24th St Mission', x: 185, y: 438 },
+  // San Francisco Market / Mission trunk (~44px apart, was ~33px)
+  { abbr: 'EMBR', name: 'Embarcadero', x: 186, y: 420 },
+  { abbr: 'MONT', name: 'Montgomery St', x: 168, y: 460 },
+  { abbr: 'POWL', name: 'Powell St', x: 150, y: 500 },
+  { abbr: 'CIVC', name: 'Civic Center/UN Plaza', x: 132, y: 540 },
+  { abbr: '16TH', name: '16th St Mission', x: 114, y: 580 },
+  { abbr: '24TH', name: '24th St Mission', x: 96, y: 620 },
+  { abbr: 'GLEN', name: 'Glen Park', x: 78, y: 660 },
+  { abbr: 'BALB', name: 'Balboa Park', x: 60, y: 700 },
+  { abbr: 'DALY', name: 'Daly City', x: 42, y: 740 },
 
-  // 45° southwest (Mission–Daly on the official map)
-  { abbr: 'GLEN', name: 'Glen Park', x: 161, y: 462 },
-  { abbr: 'BALB', name: 'Balboa Park', x: 137, y: 486 },
-  { abbr: 'DALY', name: 'Daly City', x: 113, y: 510 },
+  // Peninsula / SFO / Millbrae (shifted down to match wider SF trunk)
+  { abbr: 'COLM', name: 'Colma', x: 58, y: 778 },
+  { abbr: 'SSAN', name: 'South San Francisco', x: 78, y: 812 },
+  { abbr: 'SBRN', name: 'San Bruno', x: 102, y: 846 },
+  { abbr: 'SFIA', name: 'San Francisco Airport', x: 172, y: 826 },
+  { abbr: 'MLBR', name: 'Millbrae', x: 172, y: 870 },
 
-  // Peninsula + SFO / Millbrae fork
-  { abbr: 'COLM', name: 'Colma', x: 91, y: 532 },
-  { abbr: 'SSAN', name: 'South San Francisco', x: 69, y: 554 },
-  { abbr: 'SBRN', name: 'San Bruno', x: 47, y: 576 },
-  { abbr: 'SFIA', name: 'San Francisco Airport', x: 28, y: 558 },
-  { abbr: 'MLBR', name: 'Millbrae', x: 52, y: 598 },
+  // East Bay south (Lake Merritt → Bay Fair, ~50px apart)
+  { abbr: 'FTVL', name: 'Fruitvale', x: 558, y: 436 },
+  { abbr: 'COLS', name: 'Coliseum', x: 594, y: 476 },
+  { abbr: 'OAKL', name: 'Oakland Airport', x: 652, y: 462 },
+  { abbr: 'SANL', name: 'San Leandro', x: 628, y: 518 },
+  { abbr: 'BAYF', name: 'Bay Fair', x: 660, y: 562 },
 
-  // East Bay corridor (south from Lake Merritt)
-  { abbr: 'FTVL', name: 'Fruitvale', x: 495, y: 356 },
-  { abbr: 'COLS', name: 'Coliseum', x: 495, y: 379 },
-  { abbr: 'OAKL', name: 'Oakland Airport', x: 540, y: 388 },
-  { abbr: 'SANL', name: 'San Leandro', x: 495, y: 402 },
-  { abbr: 'BAYF', name: 'Bay Fair', x: 495, y: 425 },
+  // Dublin / Pleasanton
+  { abbr: 'CAST', name: 'Castro Valley', x: 724, y: 548 },
+  { abbr: 'WDUB', name: 'West Dublin/Pleasanton', x: 790, y: 520 },
+  { abbr: 'DUBL', name: 'Dublin/Pleasanton', x: 856, y: 490 },
 
-  // Dublin/Pleasanton (northeast from Bay Fair)
-  { abbr: 'CAST', name: 'Castro Valley', x: 532, y: 438 },
-  { abbr: 'WDUB', name: 'West Dublin/Pleasanton', x: 572, y: 448 },
-  { abbr: 'DUBL', name: 'Dublin/Pleasanton', x: 612, y: 458 },
-
-  // Berryessa / San José
-  { abbr: 'HAYW', name: 'Hayward', x: 495, y: 448 },
-  { abbr: 'SHAY', name: 'South Hayward', x: 495, y: 472 },
-  { abbr: 'UCTY', name: 'Union City', x: 495, y: 496 },
-  { abbr: 'FRMT', name: 'Fremont', x: 495, y: 520 },
-  { abbr: 'WARM', name: 'Warm Springs/South Fremont', x: 495, y: 544 },
-  { abbr: 'MLPT', name: 'Milpitas', x: 495, y: 568 },
-  { abbr: 'BERY', name: 'Berryessa/North San Jose', x: 495, y: 592 },
+  // Berryessa (~48px apart)
+  { abbr: 'HAYW', name: 'Hayward', x: 692, y: 612 },
+  { abbr: 'SHAY', name: 'South Hayward', x: 720, y: 650 },
+  { abbr: 'UCTY', name: 'Union City', x: 748, y: 688 },
+  { abbr: 'FRMT', name: 'Fremont', x: 776, y: 726 },
+  { abbr: 'WARM', name: 'Warm Springs/South Fremont', x: 802, y: 764 },
+  { abbr: 'MLPT', name: 'Milpitas', x: 828, y: 800 },
+  { abbr: 'BERY', name: 'Berryessa/North San Jose', x: 854, y: 836 },
 ];
 
 export const STATION_MAP = new Map(STATIONS.map((s) => [s.abbr, s]));
@@ -157,24 +144,6 @@ export const LINES: MapLine[] = [
   },
 ];
 
-/* Oakland Airport connector (not a full "line" but a shuttle) */
-export const OAK_CONNECTOR = {
-  from: 'COLS',
-  to: 'OAKL',
-  color: '#888888',
-};
-
-export function getLinePointsString(line: MapLine): string {
-  return line.stations
-    .map((abbr) => {
-      const station = STATION_MAP.get(abbr);
-      if (!station) return null;
-      return `${station.x},${station.y}`;
-    })
-    .filter(Boolean)
-    .join(' ');
-}
-
 /** Lines (colors) that serve this station abbreviation — for UI chips. */
 export function getLinesForStation(abbr: string): Pick<MapLine, 'name' | 'color' | 'hexcolor'>[] {
   return LINES.filter((line) => line.stations.includes(abbr)).map(({ name, color, hexcolor }) => ({
@@ -182,4 +151,117 @@ export function getLinesForStation(abbr: string): Pick<MapLine, 'name' | 'color'
     color,
     hexcolor,
   }));
+}
+
+// ---------------------------------------------------------------------------
+// Segment offset computation — fans overlapping lines apart on shared track
+// ---------------------------------------------------------------------------
+
+const OFFSET_PX = 14;
+
+function segmentKey(a: string, b: string): string {
+  return a < b ? `${a}::${b}` : `${b}::${a}`;
+}
+
+function buildSegmentLineMap(): Map<string, string[]> {
+  const map = new Map<string, string[]>();
+  for (const line of LINES) {
+    for (let i = 0; i < line.stations.length - 1; i++) {
+      const key = segmentKey(line.stations[i], line.stations[i + 1]);
+      let colors = map.get(key);
+      if (!colors) {
+        colors = [];
+        map.set(key, colors);
+      }
+      if (!colors.includes(line.color)) {
+        colors.push(line.color);
+      }
+    }
+  }
+  return map;
+}
+
+const SEGMENT_LINES = buildSegmentLineMap();
+
+/** First line in this order that uses an edge defines tangent direction → stable normals along corridors. */
+const EDGE_TANGENT_PRIORITY = ['YELLOW', 'BLUE', 'ORANGE', 'GREEN', 'RED'] as const;
+
+function tangentForEdge(abbrLo: string, abbrHi: string): { dx: number; dy: number } {
+  const key = segmentKey(abbrLo, abbrHi);
+  const colorsOn = SEGMENT_LINES.get(key);
+  const fallback = (): { dx: number; dy: number } => {
+    const a = STATION_MAP.get(abbrLo)!;
+    const b = STATION_MAP.get(abbrHi)!;
+    return { dx: b.x - a.x, dy: b.y - a.y };
+  };
+  if (!colorsOn?.length) return fallback();
+
+  for (const color of EDGE_TANGENT_PRIORITY) {
+    if (!colorsOn.includes(color)) continue;
+    const line = LINES.find((l) => l.color === color)!;
+    for (let i = 0; i < line.stations.length - 1; i++) {
+      const u = line.stations[i];
+      const v = line.stations[i + 1];
+      if ((u === abbrLo && v === abbrHi) || (u === abbrHi && v === abbrLo)) {
+        const from = STATION_MAP.get(u)!;
+        const to = STATION_MAP.get(v)!;
+        return { dx: to.x - from.x, dy: to.y - from.y };
+      }
+    }
+  }
+  return fallback();
+}
+
+export interface OffsetSegment {
+  fromAbbr: string;
+  toAbbr: string;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  lineColor: string;
+  hexcolor: string;
+}
+
+export function computeAllLineSegments(): OffsetSegment[] {
+  const segments: OffsetSegment[] = [];
+
+  for (const line of LINES) {
+    for (let i = 0; i < line.stations.length - 1; i++) {
+      const stA = STATION_MAP.get(line.stations[i]);
+      const stB = STATION_MAP.get(line.stations[i + 1]);
+      if (!stA || !stB) continue;
+
+      const key = segmentKey(line.stations[i], line.stations[i + 1]);
+      const linesOnSegment = SEGMENT_LINES.get(key) ?? [line.color];
+      const count = linesOnSegment.length;
+      const idx = linesOnSegment.indexOf(line.color);
+
+      const abbrA = line.stations[i];
+      const abbrB = line.stations[i + 1];
+      const { dx, dy } = tangentForEdge(abbrA, abbrB);
+      const len = Math.sqrt(dx * dx + dy * dy);
+      if (len === 0) continue;
+
+      const nx = -dy / len;
+      const ny = dx / len;
+
+      const offsetAmount = (idx - (count - 1) / 2) * OFFSET_PX;
+      const ox = nx * offsetAmount;
+      const oy = ny * offsetAmount;
+
+      segments.push({
+        fromAbbr: line.stations[i],
+        toAbbr: line.stations[i + 1],
+        x1: stA.x + ox,
+        y1: stA.y + oy,
+        x2: stB.x + ox,
+        y2: stB.y + oy,
+        lineColor: line.color,
+        hexcolor: line.hexcolor,
+      });
+    }
+  }
+
+  return segments;
 }

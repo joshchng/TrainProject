@@ -1,5 +1,28 @@
+.windowFill {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.windowBody {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .tableWrapper {
   overflow-x: auto;
+}
+
+.tableWrapperFill {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .table {
@@ -7,6 +30,7 @@
   border-collapse: collapse;
   font-family: var(--font-mono);
   font-size: var(--text-sm);
+  table-layout: fixed;
 }
 
 .table th {
@@ -22,10 +46,24 @@
   white-space: nowrap;
 }
 
-.headerDest { width: 50%; }
-.headerMin { width: 20%; }
-.headerPlat { width: 15%; }
-.headerLen { width: 15%; }
+.headerDest {
+  width: auto;
+}
+
+.headerMin {
+  width: 4.5rem;
+  text-align: center;
+}
+
+.headerPlat {
+  width: 2.5rem;
+  text-align: center;
+}
+
+.headerLen {
+  width: 3.25rem;
+  text-align: center;
+}
 
 .row {
   border-bottom: var(--border-hairline) solid var(--border-subtle);
@@ -39,24 +77,51 @@
 .cellMin,
 .cellPlat,
 .cellLen {
-  padding: var(--space-2);
+  padding: var(--space-1) var(--space-2);
   color: var(--text-primary);
   perspective: 200px;
+  vertical-align: middle;
 }
 
+/* Keep <td> as table-cell — display:flex on td breaks table layout in WebKit/Blink. */
 .cellDest {
+  overflow: hidden;
+}
+
+.cellDestInner {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  min-width: 0;
+}
+
+.cellDest .flipCell {
+  flex: 1 1 0;
+  min-width: 0;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .cellMin {
   font-weight: 700;
+  text-align: center;
+}
+
+.cellMin .flipCell {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 3.25rem;
+  padding: 2px 6px;
+  box-sizing: border-box;
 }
 
 .cellPlat,
 .cellLen {
   color: var(--text-secondary);
+  text-align: center;
 }
 
 .lineColorDot {

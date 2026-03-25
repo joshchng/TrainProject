@@ -29,6 +29,9 @@ export function StationInfo() {
         <>
           <h2 className={styles.name}>{meta?.name ?? selectedStation}</h2>
           <p className={styles.abbr}>{selectedStation}</p>
+          <Link to={`/station/${selectedStation}`} className={styles.detailLink}>
+            Full station page →
+          </Link>
           {meta && (
             <address className={styles.address}>
               {meta.address}
@@ -46,9 +49,6 @@ export function StationInfo() {
               </li>
             ))}
           </ul>
-          <Link to={`/station/${selectedStation}`} className={styles.detailLink}>
-            Open full station view →
-          </Link>
         </>
       )}
     </RetroWindow>

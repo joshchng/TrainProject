@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import type { MapStation } from './map-data';
 import styles from './Map.module.css';
 
@@ -8,60 +7,71 @@ interface StationDotProps {
   onSelect: (abbr: string) => void;
 }
 
+const STATION_SIZE = 24;
+const HALF = STATION_SIZE / 2;
+const SELECTED_PAD = 7;
+/** Gap between square dot and label — larger so text sits clearer of track geometry. */
+const LABEL_GAP = 17;
+
+/**
+ * Labels default to the right of the dot. On the western (SF) trunk and far-east
+ * branches, flip to the left so text grows into open map space instead of across lines.
+ */
+function labelPlacement(cx: number): { x: number; anchor: 'start' | 'end' } {
+  const labelLeft = cx < 200 || cx > 780;
+  return labelLeft
+    ? { x: cx - HALF - LABEL_GAP, anchor: 'end' as const }
+    : { x: cx + HALF + LABEL_GAP, anchor: 'start' as const };
+}
+
 export function StationDot({ station, isSelected, onSelect }: StationDotProps) {
-  const [hovered, setHovered] = useState(false);
+  const { x: cx, y: cy } = station;
+  const { x: labelX, anchor: labelAnchor } = labelPlacement(cx);
 
   return (
-    <g
-      className={styles.stationGroup}
-      onClick={() => onSelect(station.abbr)}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{ cursor: 'pointer' }}
-    >
+    <g className={styles.stationGroup} onClick={() => onSelect(station.abbr)}>
+      <title>{station.name}</title>
       {isSelected && (
-        <circle
-          cx={station.x}
-          cy={station.y}
-          r={9}
+        <rect
+          x={cx - HALF - SELECTED_PAD}
+          y={cy - HALF - SELECTED_PAD}
+          width={STATION_SIZE + SELECTED_PAD * 2}
+          height={STATION_SIZE + SELECTED_PAD * 2}
+          rx={3}
           fill="none"
-          stroke="#B8A04A"
-          strokeWidth={2}
-          className="animate-pulse"
+          stroke="#00AEEF"
+          strokeWidth={4}
+          opacity={0.8}
         />
       )}
-      <circle
-        cx={station.x}
-        cy={station.y}
-        r={5}
-        fill={isSelected ? '#B8A04A' : '#F5F0E1'}
-        stroke="#1A1A18"
-        strokeWidth={1.5}
+
+      <rect
+        x={cx - HALF}
+        y={cy - HALF}
+        width={STATION_SIZE}
+        height={STATION_SIZE}
+        rx={3}
+        className={isSelected ? styles.stationDotSelected : styles.stationDot}
       />
-      {hovered && (
-        <g>
-          <rect
-            x={station.x + 10}
-            y={station.y - 18}
-            width={station.name.length * 6.5 + 12}
-            height={22}
-            rx={2}
-            fill="#1A1A18"
-            fillOpacity={0.92}
-            stroke="#6B4226"
-            strokeWidth={1}
-          />
-          <text
-            x={station.x + 16}
-            y={station.y - 3}
-            fill="#F5F0E1"
-            fontSize={11}
-            fontFamily="var(--font-ui)"
-          >
-            {station.name}
-          </text>
-        </g>
-      )}
+
+      {/* Hit area — oversized invisible rect for easier clicking */}
+      <rect
+        x={cx - STATION_SIZE}
+        y={cy - STATION_SIZE}
+        width={STATION_SIZE * 2}
+        height={STATION_SIZE * 2}
+        fill="transparent"
+      />
+
+      <text
+        x={labelX}
+        y={cy + 9}
+        textAnchor={labelAnchor}
+        className={styles.stationLabel}
+      >
+        {station.abbr}
+      </text>
+
     </g>
   );
 }

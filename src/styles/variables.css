@@ -55,6 +55,11 @@
   --border-subtle: rgba(201, 184, 150, 0.22);
   --color-interactive-accent: var(--color-fern);
 
+  /* === BART poster sprinkles (accents on top of earth/terminal base) === */
+  --poster-cyan: #00aeef;
+  --poster-cyan-soft: rgba(0, 174, 239, 0.35);
+  --poster-cream-glow: rgba(242, 242, 240, 0.08);
+
   /* === Typography (terminal / 90s workstation) === */
   --font-display: 'VT323', monospace;
   --font-ui: 'IBM Plex Mono', 'Courier New', monospace;
@@ -83,8 +88,8 @@
   --space-12: 48px;
 
   /* === Borders === */
-  --border-bevel-light: #A08060;
-  --border-bevel-dark: #3A2A1A;
+  --border-bevel-light: #a08060;
+  --border-bevel-dark: #3a2a1a;
   --border-width: 2px;
   --border-hairline: 1px;
   --radius-sm: 2px;
@@ -93,7 +98,7 @@
 
   /* === Layout === */
   --max-width: 1200px;
-  --sidebar-width: 320px;
+  --sidebar-width: clamp(340px, 34vw, 440px);
   --header-height: 56px;
   --footer-height: 36px;
 }

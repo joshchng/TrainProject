@@ -37,11 +37,13 @@ function DepartureRow({ departure }: { departure: FlatDeparture }) {
       transition={{ duration: 0.2 }}
     >
       <td className={styles.cellDest}>
-        <span
-          className={styles.lineColorDot}
-          style={{ backgroundColor: departure.hexcolor }}
-        />
-        <FlipCell value={departure.destination} />
+        <div className={styles.cellDestInner}>
+          <span
+            className={styles.lineColorDot}
+            style={{ backgroundColor: departure.hexcolor }}
+          />
+          <FlipCell value={departure.destination} />
+        </div>
       </td>
       <td className={`${styles.cellMin} ${isLeaving ? styles.leaving : ''}`}>
         <FlipCell value={minuteStr} className={isLeaving ? styles.leaving : ''} />
@@ -59,9 +61,11 @@ function DepartureRow({ departure }: { departure: FlatDeparture }) {
 interface DepartureBoardProps {
   /** When set, shows ETDs for this station (e.g. station detail route). Otherwise uses map selection. */
   forcedStation?: string | null;
+  /** Grow to fill a flex parent and scroll the table inside (home sidebar). */
+  fillHeight?: boolean;
 }
 
-export function DepartureBoard({ forcedStation }: DepartureBoardProps) {
+export function DepartureBoard({ forcedStation, fillHeight }: DepartureBoardProps) {
   const selectedStation = useAppStore((s) => s.selectedStation);
   const activeStation = forcedStation ?? selectedStation;
   const activeLines = useAppStore((s) => s.activeLines);
@@ -70,9 +74,12 @@ export function DepartureBoard({ forcedStation }: DepartureBoardProps) {
 
   const departures = filterDepartures(etdData, activeLines, directionFilter);
 
+  const winClass = fillHeight ? styles.windowFill : '';
+  const bodyClass = fillHeight ? styles.windowBody : '';
+
   if (!activeStation) {
     return (
-      <RetroWindow title="Departures">
+      <RetroWindow title="Departures" className={winClass} contentClassName={bodyClass}>
         <div className={styles.empty}>
           <span className={styles.emptyIcon}>&#9654;</span>
           Select a station on the map
@@ -82,13 +89,17 @@ export function DepartureBoard({ forcedStation }: DepartureBoardProps) {
   }
 
   return (
-    <RetroWindow title={`Departures — ${etdData?.stationName ?? activeStation}`}>
+    <RetroWindow
+      title={`Departures — ${etdData?.stationName ?? activeStation}`}
+      className={winClass}
+      contentClassName={bodyClass}
+    >
       {isLoading ? (
         <div className={styles.loading}>Loading departures...</div>
       ) : departures.length === 0 ? (
         <div className={styles.empty}>No departures found</div>
       ) : (
-        <div className={styles.tableWrapper}>
+        <div className={`${styles.tableWrapper} ${fillHeight ? styles.tableWrapperFill : ''}`}>
           <table className={styles.table}>
             <thead>
               <tr>
