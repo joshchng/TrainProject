@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   getStations,
@@ -8,6 +9,9 @@ import {
   getTrainCount,
   getElevatorStatus,
 } from './bart-client';
+import { getBayAreaNews } from './news-client';
+import { useAppStore } from '@/store/app-store';
+import { approximateNorthSouthFleet } from '@/utils/fleet-breakdown';
 
 export function useStations() {
   return useQuery({
@@ -64,11 +68,63 @@ export function useTrainCount() {
   });
 }
 
+/**
+ * Single fleet number for UI: official BART total when direction is “all”, otherwise an
+ * approximate north/south share derived from system ETD mix (see fleet-breakdown).
+ */
+export function useTrainsInServiceDisplay(): string {
+  const directionFilter = useAppStore((s) => s.directionFilter);
+  const windowMinutes = useAppStore((s) => s.departureWindowMinutes);
+  const countQ = useTrainCount();
+  const etdQ = useAllDepartures();
+
+  const all = countQ.data;
+  const dirPending = etdQ.isLoading && !etdQ.data;
+
+  let north: number | null = null;
+  let south: number | null = null;
+  if (all != null && etdQ.data) {
+    const split = approximateNorthSouthFleet(etdQ.data, all, windowMinutes);
+    if (split) {
+      north = split.north;
+      south = split.south;
+    }
+  }
+
+  return useMemo(() => {
+    if (countQ.isLoading) return '…';
+    if (countQ.isError || all == null) return '—';
+    if (directionFilter === 'all') return String(all);
+    if (dirPending) return '…';
+    if (directionFilter === 'North') return north == null ? '—' : String(north);
+    return south == null ? '—' : String(south);
+  }, [
+    all,
+    countQ.isError,
+    countQ.isLoading,
+    directionFilter,
+    dirPending,
+    north,
+    south,
+  ]);
+}
+
 export function useElevatorStatus() {
   return useQuery({
     queryKey: ['elevatorStatus'],
     queryFn: getElevatorStatus,
     refetchInterval: 120_000,
     staleTime: 60_000,
+  });
+}
+
+export function useBayAreaNews() {
+  return useQuery({
+    queryKey: ['bayAreaNews'],
+    queryFn: getBayAreaNews,
+    staleTime: 4 * 60_000,
+    /** Aligns with the worker’s ~5 minute RSS cache so users pick up new headlines periodically. */
+    refetchInterval: 5 * 60_000,
+    refetchOnWindowFocus: true,
   });
 }

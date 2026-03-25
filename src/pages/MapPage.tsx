@@ -13,15 +13,15 @@ export function MapPage() {
     <div className={styles.page}>
       <AlertTicker />
       <div className={styles.body}>
-        <section className={styles.mapStage} aria-label="BART system map">
-          <SystemMap fillHeight />
-        </section>
         <div className={styles.toolRail} aria-label="Map controls">
           <TrainCount compact />
           <LineFilter compact />
           <DirectionFilter compact />
           <DepartureWindowFilter compact />
         </div>
+        <section className={styles.mapStage} aria-label="BART system map">
+          <SystemMap fillHeight />
+        </section>
         <aside className={styles.dataRail} aria-label="Station and departures">
           <div className={styles.dataIntro}>
             <StationInfo />

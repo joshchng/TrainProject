@@ -14,6 +14,15 @@
   box-shadow: 0 0 14px rgba(0, 0, 0, 0.4);
 }
 
+.mapContainer:focus {
+  outline: none;
+}
+
+.mapContainer:focus-visible {
+  outline: 2px solid var(--border-accent, rgba(92, 110, 84, 0.85));
+  outline-offset: 2px;
+}
+
 .mapSvg {
   width: 100%;
   height: auto;

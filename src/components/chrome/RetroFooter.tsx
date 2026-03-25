@@ -1,10 +1,10 @@
-import { useTrainCount } from '@/api/hooks';
+import { useTrainsInServiceDisplay } from '@/api/hooks';
 import { formatLastUpdated } from '@/utils/time';
 import { useState, useEffect } from 'react';
 import styles from './RetroFooter.module.css';
 
 export function RetroFooter() {
-  const { data: trainCount } = useTrainCount();
+  const trains = useTrainsInServiceDisplay();
   const [hitCount, setHitCount] = useState(4732);
   const [lastUpdated, setLastUpdated] = useState(new Date());
 
@@ -19,8 +19,8 @@ export function RetroFooter() {
   return (
     <footer className={styles.footer}>
       <div className={styles.section}>
-        <span className={styles.label}>Trains in service:</span>
-        <span className={styles.value}>{trainCount ?? '—'}</span>
+        <span className={styles.label}>Trains:</span>
+        <span className={styles.value}>{trains}</span>
       </div>
       <div className={styles.section}>
         <span className={styles.counter}>

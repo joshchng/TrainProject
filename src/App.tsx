@@ -4,6 +4,7 @@ import { RetroFooter } from '@/components/chrome/RetroFooter';
 import { RetroHeader } from '@/components/chrome/RetroHeader';
 import { About } from '@/pages/About';
 import { MapPage } from '@/pages/MapPage';
+import { NewsPage } from '@/pages/NewsPage';
 import { StationPage } from '@/pages/StationPage';
 import styles from './App.module.css';
 
@@ -26,6 +27,7 @@ export default function App() {
             <Routes>
               <Route path="/" element={<About />} />
               <Route path="/map" element={<MapPage />} />
+              <Route path="/news" element={<NewsPage />} />
               <Route path="/station/:abbr" element={<StationPage />} />
               <Route path="/about" element={<Navigate to="/" replace />} />
             </Routes>

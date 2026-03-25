@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAppStore } from '@/store/app-store';
 import { useAllDepartures } from '@/api/hooks';
 import { getStationDepartureCounts } from '@/store/selectors';
@@ -6,7 +6,9 @@ import {
   STATIONS,
   MAP_VIEWBOX,
   computeLinePaths,
+  pickNextStationForArrowKey,
   type LinePath,
+  type MapNavDirection,
 } from './map-data';
 import { RetroButton } from '@/components/chrome/RetroButton';
 import { StationAbbrev, StationDotBody } from './StationDot';
@@ -39,9 +41,46 @@ export function SystemMap({ fillHeight = false }: SystemMapProps) {
   const { minX: vbX, minY: vbY, width: vbW, height: vbH } = MAP_VIEWBOX;
 
   const [hoveredAbbr, setHoveredAbbr] = useState<string | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const pointerInsideMapRef = useRef(false);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const root = mapContainerRef.current;
+      if (!root) return;
+      const mapFocused = document.activeElement === root;
+      if (!mapFocused && !pointerInsideMapRef.current) return;
+
+      let direction: MapNavDirection | null = null;
+      if (e.key === 'ArrowLeft') direction = 'left';
+      else if (e.key === 'ArrowRight') direction = 'right';
+      else if (e.key === 'ArrowUp') direction = 'up';
+      else if (e.key === 'ArrowDown') direction = 'down';
+      if (!direction) return;
+
+      e.preventDefault();
+      const next = pickNextStationForArrowKey(selectedStation, direction);
+      if (next) selectStation(next);
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [selectStation, selectedStation]);
 
   return (
-    <div className={`${styles.mapContainer} ${fillHeight ? styles.mapContainerFill : ''}`}>
+    <div
+      ref={mapContainerRef}
+      className={`${styles.mapContainer} ${fillHeight ? styles.mapContainerFill : ''}`}
+      tabIndex={0}
+      onPointerEnter={() => {
+        pointerInsideMapRef.current = true;
+      }}
+      onPointerLeave={() => {
+        pointerInsideMapRef.current = false;
+      }}
+      role="region"
+      aria-label="BART system map. Hover the map or focus it, then use arrow keys to move between stations."
+    >
       <div className={styles.mapToolbar}>
         <RetroButton
           type="button"
@@ -59,7 +98,7 @@ export function SystemMap({ fillHeight = false }: SystemMapProps) {
         className={styles.mapSvg}
         preserveAspectRatio="xMidYMid meet"
         role="img"
-        aria-label="BART system map with live train counts"
+        aria-hidden
       >
         <rect x={vbX} y={vbY} width={vbW} height={vbH} className={styles.mapBackground} />
 

@@ -106,6 +106,60 @@ export const STATIONS: MapStation[] = [
 
 export const STATION_MAP = new Map(STATIONS.map((s) => [s.abbr, s]));
 
+export type MapNavDirection = 'left' | 'right' | 'up' | 'down';
+
+const NAV_DIR_UNIT: Record<MapNavDirection, { x: number; y: number }> = {
+  left: { x: -1, y: 0 },
+  right: { x: 1, y: 0 },
+  up: { x: 0, y: -1 },
+  down: { x: 0, y: 1 },
+};
+
+/** Average of station map coordinates; virtual start when nothing is selected (+y is south on the diagram). */
+export function getStationNavigationOrigin(): { x: number; y: number } {
+  let sx = 0;
+  let sy = 0;
+  for (const s of STATIONS) {
+    sx += s.x;
+    sy += s.y;
+  }
+  const n = STATIONS.length;
+  return { x: sx / n, y: sy / n };
+}
+
+/**
+ * Station abbreviation most aligned with `direction` from (fromX, fromY), among stops
+ * strictly in that half-plane. Tie-break: closer Euclidean distance.
+ */
+export function pickStationInDirection(
+  fromX: number,
+  fromY: number,
+  direction: MapNavDirection,
+): string | null {
+  const d = NAV_DIR_UNIT[direction];
+  const eps = 4;
+  let best: { abbr: string; score: number; dist2: number } | null = null;
+
+  for (const st of STATIONS) {
+    const vx = st.x - fromX;
+    const vy = st.y - fromY;
+    const dot = vx * d.x + vy * d.y;
+    if (dot <= eps) continue;
+    const dist2 = vx * vx + vy * vy;
+    const dist = Math.sqrt(dist2);
+    const score = dot / dist;
+    if (
+      !best ||
+      score > best.score + 1e-6 ||
+      (Math.abs(score - best.score) <= 1e-6 && dist2 < best.dist2)
+    ) {
+      best = { abbr: st.abbr, score, dist2 };
+    }
+  }
+
+  return best?.abbr ?? null;
+}
+
 export const LINES: MapLine[] = [
   {
     name: 'Yellow',
@@ -158,6 +212,75 @@ export const LINES: MapLine[] = [
     ],
   },
 ];
+
+/** Undirected rail graph: consecutive stops on each line (shared track = one edge). */
+function buildStationAdjacency(): Map<string, Set<string>> {
+  const adj = new Map<string, Set<string>>();
+  const link = (a: string, b: string) => {
+    if (!adj.has(a)) adj.set(a, new Set());
+    if (!adj.has(b)) adj.set(b, new Set());
+    adj.get(a)!.add(b);
+    adj.get(b)!.add(a);
+  };
+  for (const line of LINES) {
+    for (let i = 0; i < line.stations.length - 1; i++) {
+      link(line.stations[i], line.stations[i + 1]);
+    }
+  }
+  return adj;
+}
+
+const STATION_ADJACENCY = buildStationAdjacency();
+
+/**
+ * Among stations adjacent to `currentAbbr` on the map graph, choose the neighbor that best
+ * matches `direction` on the schematic (+y is south). No match if no neighbor lies in that half-plane.
+ */
+export function pickAdjacentStationInDirection(
+  currentAbbr: string,
+  direction: MapNavDirection,
+): string | null {
+  const current = STATION_MAP.get(currentAbbr);
+  if (!current) return null;
+  const neighbors = STATION_ADJACENCY.get(currentAbbr);
+  if (!neighbors?.size) return null;
+
+  const d = NAV_DIR_UNIT[direction];
+  const eps = 4;
+  let best: { abbr: string; score: number; dist2: number } | null = null;
+
+  for (const nb of neighbors) {
+    const st = STATION_MAP.get(nb);
+    if (!st) continue;
+    const vx = st.x - current.x;
+    const vy = st.y - current.y;
+    const dot = vx * d.x + vy * d.y;
+    if (dot <= eps) continue;
+    const dist2 = vx * vx + vy * vy;
+    const dist = Math.sqrt(dist2);
+    const score = dot / dist;
+    if (
+      !best ||
+      score > best.score + 1e-6 ||
+      (Math.abs(score - best.score) <= 1e-6 && dist2 < best.dist2)
+    ) {
+      best = { abbr: nb, score, dist2 };
+    }
+  }
+  return best?.abbr ?? null;
+}
+
+/** With a selected station: move to an adjacent stop along the graph. With none: spatial pick from centroid to start. */
+export function pickNextStationForArrowKey(
+  currentAbbr: string | null,
+  direction: MapNavDirection,
+): string | null {
+  if (!currentAbbr) {
+    const o = getStationNavigationOrigin();
+    return pickStationInDirection(o.x, o.y, direction);
+  }
+  return pickAdjacentStationInDirection(currentAbbr, direction);
+}
 
 /** Lines (colors) that serve this station abbreviation — for UI chips. */
 export function getLinesForStation(abbr: string): Pick<MapLine, 'name' | 'color' | 'hexcolor'>[] {

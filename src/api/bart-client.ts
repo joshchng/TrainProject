@@ -168,7 +168,7 @@ export async function getTrainCount(): Promise<number> {
 }
 
 export async function getElevatorStatus(): Promise<ElevatorStatus[]> {
-  const data = await fetchEndpoint<RawElevatorResponse>('elev', { cmd: 'elev' });
+  const data = await fetchEndpoint<RawElevatorResponse>('bsa', { cmd: 'elev' });
   return asArray(data.root.bsa).map((e) => ({
     station: e.station ?? '',
     description: extractCdata(e.description),

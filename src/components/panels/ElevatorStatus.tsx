@@ -7,12 +7,25 @@ interface ElevatorStatusProps {
   stationName?: string;
 }
 
-function matchesStation(itemStation: string, abbr: string, fullName?: string): boolean {
+function matchesStation(
+  itemStation: string,
+  abbr: string,
+  fullName: string | undefined,
+  description: string,
+): boolean {
   const s = itemStation.trim().toUpperCase();
   const a = abbr.trim().toUpperCase();
+  const desc = description.trim().toUpperCase();
   if (!s) return false;
   if (s === 'ALL' || s === 'SYSTEM' || s === 'SYSTEMWIDE') return false;
   if (s === a) return true;
+  if (s === 'BART' && desc) {
+    if (a && desc.includes(a)) return true;
+    if (fullName) {
+      const n = fullName.trim().toUpperCase();
+      if (n && desc.includes(n)) return true;
+    }
+  }
   if (fullName) {
     const n = fullName.trim().toUpperCase();
     if (n && (s.includes(n) || n.includes(s))) return true;
@@ -25,7 +38,9 @@ export function ElevatorStatus({ stationAbbr, stationName }: ElevatorStatusProps
 
   const relevant =
     items?.filter(
-      (e) => matchesStation(e.station, stationAbbr, stationName) && e.description.trim(),
+      (e) =>
+        matchesStation(e.station, stationAbbr, stationName, e.description) &&
+        e.description.trim(),
     ) ?? [];
 
   return (

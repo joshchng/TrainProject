@@ -14,6 +14,9 @@ export function RetroHeader() {
         <Link to="/map" className={styles.navLink}>
           Map
         </Link>
+        <Link to="/news" className={styles.navLink}>
+          News
+        </Link>
       </nav>
     </header>
   );
