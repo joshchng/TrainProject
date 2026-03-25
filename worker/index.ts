@@ -4,7 +4,6 @@ const API_KEY = 'MW9S-E7SL-26DU-VV8V';
 const CACHE_TTLS: Record<string, number> = {
   etd: 15,
   bsa: 60,
-  count: 30,
   elev: 120,
   stn: 3600,
   route: 3600,

@@ -80,9 +80,11 @@ body::after {
 #root {
   position: relative;
   z-index: 1;
-  max-width: min(var(--max-width), 100%);
-  margin: 0 auto;
-  padding: 0 clamp(var(--space-3), 4vw, var(--space-8));
+  /* Full viewport width; map + boards stay in flow below (no fixed 1200px cap). */
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  padding: 0 clamp(var(--space-3), 2.5vw, var(--space-6));
   min-height: 100vh;
   display: flex;
   flex-direction: column;

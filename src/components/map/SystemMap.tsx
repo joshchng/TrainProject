@@ -1,15 +1,16 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useAppStore } from '@/store/app-store';
 import { useAllDepartures } from '@/api/hooks';
 import {
   STATIONS,
   STATION_MAP,
   MAP_VIEWBOX,
-  computeAllLineSegments,
-  type OffsetSegment,
+  stationLabelAnchoredLeft,
+  computeLinePaths,
+  type LinePath,
 } from './map-data';
 import { getStationTrains, type TrainAtStation } from './station-trains';
-import { StationDot } from './StationDot';
+import { StationAbbrev, StationDotBody } from './StationDot';
 import { TrainMarker } from './TrainMarker';
 import styles from './Map.module.css';
 
@@ -17,7 +18,8 @@ const FAN_RADIUS = 23;
 
 /**
  * Arranges N train markers in a ring around a station center so they
- * don't stack on top of each other.
+ * don't stack on top of each other. The first positions point away from
+ * the station label so dots don't cover abbreviations (e.g. NCON).
  */
 function fanOutPosition(
   cx: number,
@@ -25,26 +27,36 @@ function fanOutPosition(
   index: number,
   total: number,
 ): { x: number; y: number } {
-  if (total === 1) return { x: cx + FAN_RADIUS, y: cy };
-  const angle = (2 * Math.PI * index) / total - Math.PI / 2;
+  const labelLeft = stationLabelAnchoredLeft(cx);
+  if (total === 1) {
+    const x = labelLeft ? cx + FAN_RADIUS : cx - FAN_RADIUS;
+    return { x, y: cy };
+  }
+  const baseAngle = labelLeft ? 0 : Math.PI;
+  const angle = baseAngle + (2 * Math.PI * index) / total;
   return {
     x: cx + Math.cos(angle) * FAN_RADIUS,
     y: cy + Math.sin(angle) * FAN_RADIUS,
   };
 }
 
-export function SystemMap() {
+interface SystemMapProps {
+  /** Expand vertically to fill the map stage (home page grid). */
+  fillHeight?: boolean;
+}
+
+export function SystemMap({ fillHeight = false }: SystemMapProps) {
   const selectedStation = useAppStore((s) => s.selectedStation);
   const activeLines = useAppStore((s) => s.activeLines);
   const selectStation = useAppStore((s) => s.selectStation);
 
   const { data: allETDs } = useAllDepartures();
 
-  const allSegments = useMemo(() => computeAllLineSegments(), []);
+  const allPaths = useMemo(() => computeLinePaths(), []);
 
-  const visibleSegments = useMemo(
-    () => allSegments.filter((seg) => activeLines.has(seg.lineColor)),
-    [allSegments, activeLines],
+  const visiblePaths = useMemo(
+    () => allPaths.filter((p) => activeLines.has(p.lineColor)),
+    [allPaths, activeLines],
   );
 
   const trains = useMemo(
@@ -73,8 +85,10 @@ export function SystemMap() {
 
   const { width: vbW, height: vbH } = MAP_VIEWBOX;
 
+  const [hoveredAbbr, setHoveredAbbr] = useState<string | null>(null);
+
   return (
-    <div className={styles.mapContainer}>
+    <div className={`${styles.mapContainer} ${fillHeight ? styles.mapContainerFill : ''}`}>
       <svg
         viewBox={`0 0 ${vbW} ${vbH}`}
         className={styles.mapSvg}
@@ -84,31 +98,20 @@ export function SystemMap() {
       >
         <rect width={vbW} height={vbH} className={styles.mapBackground} />
 
-        {/* Line segments — drawn first so stations render on top */}
-        {visibleSegments.map((seg: OffsetSegment) => (
-          <line
-            key={`${seg.lineColor}-${seg.fromAbbr}-${seg.toAbbr}`}
-            x1={seg.x1}
-            y1={seg.y1}
-            x2={seg.x2}
-            y2={seg.y2}
-            stroke={seg.hexcolor}
-            strokeWidth={3.5}
+        {/* Line paths — drawn first so stations render on top */}
+        {visiblePaths.map((lp: LinePath) => (
+          <path
+            key={lp.lineColor}
+            d={lp.d}
+            stroke={lp.hexcolor}
+            strokeWidth={3}
+            fill="none"
+            strokeLinejoin="round"
             className={styles.lineSegment}
           />
         ))}
 
-        {/* Station dots */}
-        {STATIONS.map((station) => (
-          <StationDot
-            key={station.abbr}
-            station={station}
-            isSelected={selectedStation === station.abbr}
-            onSelect={selectStation}
-          />
-        ))}
-
-        {/* Train markers — fanned out around their station */}
+        {/* Train markers — under stations so labels stay readable */}
         {Array.from(trainsByStation.entries()).map(([stAbbr, stTrains]) => {
           const station = STATION_MAP.get(stAbbr);
           if (!station) return null;
@@ -124,6 +127,31 @@ export function SystemMap() {
             );
           });
         })}
+
+        {/* Station squares — under global label layer */}
+        {STATIONS.map((station) => (
+          <StationDotBody
+            key={station.abbr}
+            station={station}
+            isSelected={selectedStation === station.abbr}
+            isHovered={hoveredAbbr === station.abbr}
+            onSelect={selectStation}
+            onPointerEnter={() => setHoveredAbbr(station.abbr)}
+            onPointerLeave={() => setHoveredAbbr(null)}
+          />
+        ))}
+
+        {/* Abbrev layer last so text clears trains and other station squares */}
+        {STATIONS.map((station) => (
+          <StationAbbrev
+            key={`${station.abbr}-abbr`}
+            station={station}
+            isHovered={hoveredAbbr === station.abbr}
+            onSelect={selectStation}
+            onPointerEnter={() => setHoveredAbbr(station.abbr)}
+            onPointerLeave={() => setHoveredAbbr(null)}
+          />
+        ))}
       </svg>
     </div>
   );

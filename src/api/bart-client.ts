@@ -163,7 +163,7 @@ export async function getAdvisories(): Promise<Advisory[]> {
 }
 
 export async function getTrainCount(): Promise<number> {
-  const data = await fetchEndpoint<RawTrainCountResponse>('count', { cmd: 'count' });
+  const data = await fetchEndpoint<RawTrainCountResponse>('bsa', { cmd: 'count' });
   return safeInt(data.root.traincount, 0);
 }
 

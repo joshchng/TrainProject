@@ -97,8 +97,9 @@
   --radius-card: 8px;
 
   /* === Layout === */
-  --max-width: 1200px;
-  --sidebar-width: clamp(340px, 34vw, 440px);
+  --max-width: 1200px; /* content pages; shell uses full width in retro.css */
+  /* Home: tool + data columns share this width (two identical grid tracks) */
+  --home-rail-width: clamp(260px, 18vw, 340px);
   --header-height: 56px;
   --footer-height: 36px;
 }

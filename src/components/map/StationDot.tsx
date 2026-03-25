@@ -1,11 +1,5 @@
-import type { MapStation } from './map-data';
+import { stationLabelAnchoredLeft, type MapStation } from './map-data';
 import styles from './Map.module.css';
-
-interface StationDotProps {
-  station: MapStation;
-  isSelected: boolean;
-  onSelect: (abbr: string) => void;
-}
 
 const STATION_SIZE = 24;
 const HALF = STATION_SIZE / 2;
@@ -17,19 +11,57 @@ const LABEL_GAP = 17;
  * Labels default to the right of the dot. On the western (SF) trunk and far-east
  * branches, flip to the left so text grows into open map space instead of across lines.
  */
-function labelPlacement(cx: number): { x: number; anchor: 'start' | 'end' } {
-  const labelLeft = cx < 200 || cx > 780;
-  return labelLeft
+function stationAbbrevLayout(station: MapStation): {
+  labelX: number;
+  labelAnchor: 'start' | 'end';
+  baselineY: number;
+  hitRect: { x: number; y: number; width: number; height: number };
+} {
+  const { x: cx, y: cy } = station;
+  const { x: labelX, anchor: labelAnchor } = stationLabelAnchoredLeft(cx)
     ? { x: cx - HALF - LABEL_GAP, anchor: 'end' as const }
     : { x: cx + HALF + LABEL_GAP, anchor: 'start' as const };
+
+  const baselineY = cy + 9;
+  const hitH = 15;
+  const hitW = 46;
+  const hitY = baselineY - 11;
+  const hitRect =
+    labelAnchor === 'end'
+      ? { x: labelX - hitW, y: hitY, width: hitW, height: hitH }
+      : { x: labelX - 2, y: hitY, width: hitW, height: hitH };
+
+  return { labelX, labelAnchor, baselineY, hitRect };
 }
 
-export function StationDot({ station, isSelected, onSelect }: StationDotProps) {
+interface StationDotBodyProps {
+  station: MapStation;
+  isSelected: boolean;
+  isHovered: boolean;
+  onSelect: (abbr: string) => void;
+  onPointerEnter: () => void;
+  onPointerLeave: () => void;
+}
+
+export function StationDotBody({
+  station,
+  isSelected,
+  isHovered,
+  onSelect,
+  onPointerEnter,
+  onPointerLeave,
+}: StationDotBodyProps) {
   const { x: cx, y: cy } = station;
-  const { x: labelX, anchor: labelAnchor } = labelPlacement(cx);
+  const dotClass =
+    isSelected ? styles.stationDotSelected : isHovered ? styles.stationDotHover : styles.stationDot;
 
   return (
-    <g className={styles.stationGroup} onClick={() => onSelect(station.abbr)}>
+    <g
+      className={styles.stationGroup}
+      onClick={() => onSelect(station.abbr)}
+      onPointerEnter={onPointerEnter}
+      onPointerLeave={onPointerLeave}
+    >
       <title>{station.name}</title>
       {isSelected && (
         <rect
@@ -38,10 +70,7 @@ export function StationDot({ station, isSelected, onSelect }: StationDotProps) {
           width={STATION_SIZE + SELECTED_PAD * 2}
           height={STATION_SIZE + SELECTED_PAD * 2}
           rx={3}
-          fill="none"
-          stroke="#00AEEF"
-          strokeWidth={4}
-          opacity={0.8}
+          className={styles.stationSelectedRing}
         />
       )}
 
@@ -51,7 +80,7 @@ export function StationDot({ station, isSelected, onSelect }: StationDotProps) {
         width={STATION_SIZE}
         height={STATION_SIZE}
         rx={3}
-        className={isSelected ? styles.stationDotSelected : styles.stationDot}
+        className={dotClass}
       />
 
       {/* Hit area — oversized invisible rect for easier clicking */}
@@ -62,16 +91,41 @@ export function StationDot({ station, isSelected, onSelect }: StationDotProps) {
         height={STATION_SIZE * 2}
         fill="transparent"
       />
+    </g>
+  );
+}
 
-      <text
-        x={labelX}
-        y={cy + 9}
-        textAnchor={labelAnchor}
-        className={styles.stationLabel}
-      >
+interface StationAbbrevProps {
+  station: MapStation;
+  isHovered: boolean;
+  onSelect: (abbr: string) => void;
+  onPointerEnter: () => void;
+  onPointerLeave: () => void;
+}
+
+export function StationAbbrev({
+  station,
+  isHovered,
+  onSelect,
+  onPointerEnter,
+  onPointerLeave,
+}: StationAbbrevProps) {
+  const { labelX, labelAnchor, baselineY, hitRect } = stationAbbrevLayout(station);
+  const labelCls =
+    `${styles.stationLabel}${isHovered ? ` ${styles.stationLabelHover}` : ''}`;
+
+  return (
+    <g
+      className={styles.stationGroup}
+      onClick={() => onSelect(station.abbr)}
+      onPointerEnter={onPointerEnter}
+      onPointerLeave={onPointerLeave}
+    >
+      <title>{station.name}</title>
+      <rect {...hitRect} fill="transparent" />
+      <text x={labelX} y={baselineY} textAnchor={labelAnchor} className={labelCls}>
         {station.abbr}
       </text>
-
     </g>
   );
 }

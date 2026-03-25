@@ -19,6 +19,15 @@ export interface MapLine {
 
 export const MAP_VIEWBOX = { width: 1024, height: 928 } as const;
 
+/**
+ * Abbrev label is placed west of the dot on the SF trunk / far-east map margin;
+ * trains should fan out from the opposite side so markers don't cover text.
+ * East cutoff750 pulls Concord-line stations (e.g. NCON at 758) left of their dots.
+ */
+export function stationLabelAnchoredLeft(cx: number): boolean {
+  return cx < 200 || cx > 750;
+}
+
 export const STATIONS: MapStation[] = [
   // Richmond branch → MacArthur (~36px apart)
   { abbr: 'RICH', name: 'Richmond', x: 278, y: 68 },
@@ -157,7 +166,9 @@ export function getLinesForStation(abbr: string): Pick<MapLine, 'name' | 'color'
 // Segment offset computation — fans overlapping lines apart on shared track
 // ---------------------------------------------------------------------------
 
-const OFFSET_PX = 14;
+const OFFSET_PX = 6;
+
+const COLOR_PRIORITY = ['YELLOW', 'BLUE', 'ORANGE', 'GREEN', 'RED'] as const;
 
 function segmentKey(a: string, b: string): string {
   return a < b ? `${a}::${b}` : `${b}::${a}`;
@@ -178,31 +189,35 @@ function buildSegmentLineMap(): Map<string, string[]> {
       }
     }
   }
+  for (const colors of map.values()) {
+    colors.sort(
+      (a, b) => COLOR_PRIORITY.indexOf(a as typeof COLOR_PRIORITY[number])
+             - COLOR_PRIORITY.indexOf(b as typeof COLOR_PRIORITY[number]),
+    );
+  }
   return map;
 }
 
 const SEGMENT_LINES = buildSegmentLineMap();
 
-/** First line in this order that uses an edge defines tangent direction → stable normals along corridors. */
-const EDGE_TANGENT_PRIORITY = ['YELLOW', 'BLUE', 'ORANGE', 'GREEN', 'RED'] as const;
-
-function tangentForEdge(abbrLo: string, abbrHi: string): { dx: number; dy: number } {
-  const key = segmentKey(abbrLo, abbrHi);
+/** First line in priority order that uses an edge defines tangent direction → stable normals. */
+function tangentForEdge(abbrA: string, abbrB: string): { dx: number; dy: number } {
+  const key = segmentKey(abbrA, abbrB);
   const colorsOn = SEGMENT_LINES.get(key);
   const fallback = (): { dx: number; dy: number } => {
-    const a = STATION_MAP.get(abbrLo)!;
-    const b = STATION_MAP.get(abbrHi)!;
+    const a = STATION_MAP.get(abbrA)!;
+    const b = STATION_MAP.get(abbrB)!;
     return { dx: b.x - a.x, dy: b.y - a.y };
   };
   if (!colorsOn?.length) return fallback();
 
-  for (const color of EDGE_TANGENT_PRIORITY) {
+  for (const color of COLOR_PRIORITY) {
     if (!colorsOn.includes(color)) continue;
-    const line = LINES.find((l) => l.color === color)!;
-    for (let i = 0; i < line.stations.length - 1; i++) {
-      const u = line.stations[i];
-      const v = line.stations[i + 1];
-      if ((u === abbrLo && v === abbrHi) || (u === abbrHi && v === abbrLo)) {
+    const pLine = LINES.find((l) => l.color === color)!;
+    for (let i = 0; i < pLine.stations.length - 1; i++) {
+      const u = pLine.stations[i];
+      const v = pLine.stations[i + 1];
+      if ((u === abbrA && v === abbrB) || (u === abbrB && v === abbrA)) {
         const from = STATION_MAP.get(u)!;
         const to = STATION_MAP.get(v)!;
         return { dx: to.x - from.x, dy: to.y - from.y };
@@ -212,56 +227,70 @@ function tangentForEdge(abbrLo: string, abbrHi: string): { dx: number; dy: numbe
   return fallback();
 }
 
-export interface OffsetSegment {
-  fromAbbr: string;
-  toAbbr: string;
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-  lineColor: string;
-  hexcolor: string;
+function edgeNormal(abbrA: string, abbrB: string): { nx: number; ny: number } {
+  const { dx, dy } = tangentForEdge(abbrA, abbrB);
+  const len = Math.sqrt(dx * dx + dy * dy);
+  if (len === 0) return { nx: 0, ny: 0 };
+  return { nx: -dy / len, ny: dx / len };
 }
 
-export function computeAllLineSegments(): OffsetSegment[] {
-  const segments: OffsetSegment[] = [];
+function edgeOffset(lineColor: string, abbrA: string, abbrB: string): number {
+  const key = segmentKey(abbrA, abbrB);
+  const linesOn = SEGMENT_LINES.get(key) ?? [lineColor];
+  const count = linesOn.length;
+  const idx = linesOn.indexOf(lineColor);
+  return (idx - (count - 1) / 2) * OFFSET_PX;
+}
+
+// ---------------------------------------------------------------------------
+// Continuous line paths — one <path> per BART line with smooth junction joins
+// ---------------------------------------------------------------------------
+
+export interface LinePath {
+  lineColor: string;
+  hexcolor: string;
+  d: string;
+}
+
+export function computeLinePaths(): LinePath[] {
+  const paths: LinePath[] = [];
 
   for (const line of LINES) {
-    for (let i = 0; i < line.stations.length - 1; i++) {
-      const stA = STATION_MAP.get(line.stations[i]);
-      const stB = STATION_MAP.get(line.stations[i + 1]);
-      if (!stA || !stB) continue;
+    const pts: [number, number][] = [];
 
-      const key = segmentKey(line.stations[i], line.stations[i + 1]);
-      const linesOnSegment = SEGMENT_LINES.get(key) ?? [line.color];
-      const count = linesOnSegment.length;
-      const idx = linesOnSegment.indexOf(line.color);
+    const addPt = (x: number, y: number) => {
+      const last = pts[pts.length - 1];
+      if (last && Math.abs(last[0] - x) < 0.5 && Math.abs(last[1] - y) < 0.5) return;
+      pts.push([x, y]);
+    };
 
-      const abbrA = line.stations[i];
-      const abbrB = line.stations[i + 1];
-      const { dx, dy } = tangentForEdge(abbrA, abbrB);
-      const len = Math.sqrt(dx * dx + dy * dy);
-      if (len === 0) continue;
+    for (let i = 0; i < line.stations.length; i++) {
+      const st = STATION_MAP.get(line.stations[i]);
+      if (!st) continue;
 
-      const nx = -dy / len;
-      const ny = dx / len;
+      if (i > 0) {
+        const prev = line.stations[i - 1];
+        const curr = line.stations[i];
+        const n = edgeNormal(prev, curr);
+        const off = edgeOffset(line.color, prev, curr);
+        addPt(st.x + n.nx * off, st.y + n.ny * off);
+      }
 
-      const offsetAmount = (idx - (count - 1) / 2) * OFFSET_PX;
-      const ox = nx * offsetAmount;
-      const oy = ny * offsetAmount;
-
-      segments.push({
-        fromAbbr: line.stations[i],
-        toAbbr: line.stations[i + 1],
-        x1: stA.x + ox,
-        y1: stA.y + oy,
-        x2: stB.x + ox,
-        y2: stB.y + oy,
-        lineColor: line.color,
-        hexcolor: line.hexcolor,
-      });
+      if (i < line.stations.length - 1) {
+        const curr = line.stations[i];
+        const next = line.stations[i + 1];
+        const n = edgeNormal(curr, next);
+        const off = edgeOffset(line.color, curr, next);
+        addPt(st.x + n.nx * off, st.y + n.ny * off);
+      }
     }
+
+    const d = pts
+      .map(([x, y], j) => `${j === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`)
+      .join(' ');
+
+    paths.push({ lineColor: line.color, hexcolor: line.hexcolor, d });
   }
 
-  return segments;
+  return paths;
 }

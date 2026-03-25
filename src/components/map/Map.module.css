@@ -1,6 +1,9 @@
 .mapContainer {
   --map-bg: #161412;
   --map-stroke: #0e0c0a;
+  --map-selection-fill: var(--color-accent-warm);
+  --map-selection-ring: var(--color-sand);
+  --map-selection-accent: var(--color-gold-green);
 
   width: 100%;
   background-color: var(--map-bg);
@@ -14,6 +17,19 @@
   width: 100%;
   height: auto;
   display: block;
+}
+
+.mapContainerFill {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.mapContainerFill .mapSvg {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
 }
 
 .mapBackground {
@@ -33,10 +49,6 @@
   cursor: pointer;
 }
 
-.stationGroup:hover .stationDot {
-  fill: #E0E6F0;
-}
-
 .stationDot {
   fill: #C8CDD8;
   stroke: var(--map-stroke);
@@ -44,8 +56,22 @@
   transition: fill 0.15s ease;
 }
 
+.stationDotHover {
+  fill: #e0e6f0;
+  stroke: var(--map-stroke);
+  stroke-width: 3;
+  transition: fill 0.15s ease;
+}
+
+.stationSelectedRing {
+  fill: none;
+  stroke: var(--map-selection-ring);
+  stroke-width: 4;
+  opacity: 0.9;
+}
+
 .stationDotSelected {
-  fill: #00AEEF;
+  fill: var(--map-selection-fill);
   stroke: var(--map-stroke);
   stroke-width: 3;
 }
@@ -53,21 +79,21 @@
 /* ---- Station labels ---- */
 
 .stationLabel {
-  fill: #e4e8f0;
+  fill: #f0f3f8;
   font-size: 12px;
   font-weight: 600;
   font-family: var(--font-ui, 'Menlo', monospace);
   letter-spacing: 0.02em;
-  /* Halo so labels stay readable over line colors */
+  /* Strong halo so labels stay readable over lines, trains, and nearby dots */
   stroke: var(--map-bg);
-  stroke-width: 5px;
+  stroke-width: 6px;
   stroke-linejoin: round;
   paint-order: stroke fill;
   pointer-events: none;
   user-select: none;
 }
 
-.stationGroup:hover .stationLabel {
+.stationLabelHover {
   fill: #ffffff;
 }
 
@@ -75,12 +101,12 @@
 
 .trainCountBadge {
   fill: #22201c;
-  stroke: #00AEEF;
+  stroke: var(--map-selection-accent);
   stroke-width: 1;
 }
 
 .trainCountText {
-  fill: #00AEEF;
+  fill: var(--map-selection-accent);
   font-size: 8px;
   font-family: var(--font-ui, 'Menlo', monospace);
   text-anchor: middle;

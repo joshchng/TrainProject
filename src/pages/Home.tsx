@@ -12,20 +12,20 @@ export function Home() {
     <div className={styles.page}>
       <AlertTicker />
       <div className={styles.body}>
-        <section className={styles.mapArea} aria-label="BART system map">
-          <SystemMap />
+        <section className={styles.mapStage} aria-label="BART system map">
+          <SystemMap fillHeight />
         </section>
-        <aside className={styles.sidebar}>
-          <div className={styles.sidebarIntro}>
+        <div className={styles.toolRail} aria-label="Map controls">
+          <TrainCount compact />
+          <LineFilter compact />
+          <DirectionFilter compact />
+        </div>
+        <aside className={styles.dataRail} aria-label="Station and departures">
+          <div className={styles.dataIntro}>
             <StationInfo />
           </div>
-          <div className={styles.sidebarDepartures}>
+          <div className={styles.dataDepartures}>
             <DepartureBoard fillHeight />
-          </div>
-          <div className={styles.sidebarTools}>
-            <TrainCount />
-            <LineFilter />
-            <DirectionFilter />
           </div>
         </aside>
       </div>

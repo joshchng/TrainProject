@@ -9,13 +9,17 @@ const OPTIONS: { value: DirectionFilter; label: string }[] = [
   { value: 'South', label: 'South' },
 ];
 
-export function DirectionFilter() {
+interface DirectionFilterProps {
+  compact?: boolean;
+}
+
+export function DirectionFilter({ compact = false }: DirectionFilterProps) {
   const directionFilter = useAppStore((s) => s.directionFilter);
   const setDirection = useAppStore((s) => s.setDirection);
 
   return (
-    <RetroWindow title="Direction">
-      <p className={styles.hint}>Filter departure board by train direction.</p>
+    <RetroWindow title="Direction" compact={compact}>
+      {!compact && <p className={styles.hint}>Filter departure board by train direction.</p>}
       <div className={styles.buttons}>
         {OPTIONS.map((opt) => (
           <RetroButton

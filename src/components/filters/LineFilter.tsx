@@ -3,13 +3,19 @@ import { LINE_KEYS, LINES } from '@/utils/lines';
 import { RetroWindow } from '@/components/chrome/RetroWindow';
 import styles from './LineFilter.module.css';
 
-export function LineFilter() {
+interface LineFilterProps {
+  compact?: boolean;
+}
+
+export function LineFilter({ compact = false }: LineFilterProps) {
   const activeLines = useAppStore((s) => s.activeLines);
   const toggleLine = useAppStore((s) => s.toggleLine);
 
   return (
-    <RetroWindow title="Line filter">
-      <p className={styles.hint}>Toggle which lines are highlighted on the map and in departures.</p>
+    <RetroWindow title={compact ? 'Lines' : 'Line filter'} compact={compact}>
+      {!compact && (
+        <p className={styles.hint}>Toggle which lines are highlighted on the map and in departures.</p>
+      )}
       <ul className={styles.list}>
         {LINE_KEYS.map((key) => {
           const info = LINES[key];
