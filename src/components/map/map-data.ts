@@ -86,7 +86,6 @@ export const STATIONS: MapStation[] = [
   // East Bay south (Lake Merritt → Bay Fair, ~50px apart)
   { abbr: 'FTVL', name: 'Fruitvale', x: 558, y: 436 },
   { abbr: 'COLS', name: 'Coliseum', x: 594, y: 476 },
-  { abbr: 'OAKL', name: 'Oakland Airport', x: 652, y: 462 },
   { abbr: 'SANL', name: 'San Leandro', x: 628, y: 518 },
   { abbr: 'BAYF', name: 'Bay Fair', x: 660, y: 562 },
 

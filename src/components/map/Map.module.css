@@ -49,13 +49,42 @@
   backdrop-filter: blur(4px);
 }
 
+.mapCountFootnote {
+  position: absolute;
+  left: var(--space-2);
+  top: var(--space-2);
+  z-index: 2;
+  margin: 0;
+  max-width: min(calc(100% - var(--space-4)), 15.5rem);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background-color: rgba(22, 20, 18, 0.88);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: var(--font-ui, 'Menlo', monospace);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  line-height: 1.35;
+  color: rgba(240, 243, 248, 0.75);
+  pointer-events: none;
+  user-select: none;
+}
+
 .mapBackground {
   fill: var(--map-bg);
 }
 
 .lineSegment {
   stroke-linecap: round;
+}
+
+.lineSegmentActive {
   opacity: 0.85;
+}
+
+.lineSegmentInactive {
+  opacity: 0.42;
+  stroke: #5a5e68;
 }
 
 .stationGroup {
@@ -107,26 +136,18 @@
   fill: #ffffff;
 }
 
-.trainCountBadge {
-  fill: #22201c;
-  stroke: var(--map-selection-accent);
-  stroke-width: 1;
-}
 
-.trainCountText {
-  fill: var(--map-selection-accent);
-  font-size: 8px;
+.stationTrainCount {
+  fill: #22201c;
+  font-size: 11px;
+  font-weight: 700;
   font-family: var(--font-ui, 'Menlo', monospace);
   text-anchor: middle;
   dominant-baseline: central;
   pointer-events: none;
+  user-select: none;
 }
 
-.trainMarker {
-  pointer-events: none;
-}
-
-.trainDotOutline {
-  stroke: var(--map-stroke);
-  transition: cx 0.45s linear, cy 0.45s linear;
+.stationTrainCountSmall {
+  font-size: 9px;
 }

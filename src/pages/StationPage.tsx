@@ -4,6 +4,7 @@ import { STATION_MAP } from '@/components/map/map-data';
 import { useAppStore } from '@/store/app-store';
 import { useStations } from '@/api/hooks';
 import { DirectionFilter } from '@/components/filters/DirectionFilter';
+import { DepartureWindowFilter } from '@/components/filters/DepartureWindowFilter';
 import { DepartureBoard } from '@/components/panels/DepartureBoard';
 import { ElevatorStatus } from '@/components/panels/ElevatorStatus';
 import { PixelDivider } from '@/components/chrome/PixelDivider';
@@ -66,6 +67,7 @@ export function StationPage() {
         <div className={styles.col}>
           <div className={styles.departuresStack}>
             <DirectionFilter compact />
+            <DepartureWindowFilter compact />
             <DepartureBoard forcedStation={abbr} />
           </div>
         </div>

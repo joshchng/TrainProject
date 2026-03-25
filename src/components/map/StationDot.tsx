@@ -38,6 +38,7 @@ interface StationDotBodyProps {
   station: MapStation;
   isSelected: boolean;
   isHovered: boolean;
+  trainCount: number;
   onSelect: (abbr: string) => void;
   onPointerEnter: () => void;
   onPointerLeave: () => void;
@@ -47,6 +48,7 @@ export function StationDotBody({
   station,
   isSelected,
   isHovered,
+  trainCount,
   onSelect,
   onPointerEnter,
   onPointerLeave,
@@ -82,6 +84,16 @@ export function StationDotBody({
         rx={3}
         className={dotClass}
       />
+
+      {trainCount > 0 && (
+        <text
+          x={cx}
+          y={cy}
+          className={`${styles.stationTrainCount} ${trainCount >= 10 ? styles.stationTrainCountSmall : ''}`}
+        >
+          {trainCount}
+        </text>
+      )}
 
       {/* Hit area — oversized invisible rect for easier clicking */}
       <rect

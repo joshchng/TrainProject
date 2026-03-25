@@ -1,11 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAllDepartures, useDepartures } from '@/api/hooks';
 import { useAppStore } from '@/store/app-store';
-import {
-  filterAllStationsDepartures,
-  filterDepartures,
-  type FlatDeparture,
-} from '@/store/selectors';
+import { filterAllStationsDepartures, filterDepartures, type FlatDeparture } from '@/store/selectors';
 import { formatMinutes } from '@/utils/time';
 import { RetroWindow } from '@/components/chrome/RetroWindow';
 import styles from './DepartureBoard.module.css';
@@ -85,6 +81,7 @@ export function DepartureBoard({ forcedStation, fillHeight }: DepartureBoardProp
   const showSystemWide = viewAllDepartures && !forcedStation;
   const activeLines = useAppStore((s) => s.activeLines);
   const directionFilter = useAppStore((s) => s.directionFilter);
+  const departureWindowMinutes = useAppStore((s) => s.departureWindowMinutes);
 
   const { data: allEtds, isLoading: loadingAll } = useAllDepartures();
   const { data: etdData, isLoading: loadingOne } = useDepartures(
@@ -92,8 +89,8 @@ export function DepartureBoard({ forcedStation, fillHeight }: DepartureBoardProp
   );
 
   const departures = showSystemWide
-    ? filterAllStationsDepartures(allEtds, activeLines, directionFilter)
-    : filterDepartures(etdData, activeLines, directionFilter);
+    ? filterAllStationsDepartures(allEtds, activeLines, directionFilter, departureWindowMinutes)
+    : filterDepartures(etdData, activeLines, directionFilter, departureWindowMinutes);
 
   const isLoading = showSystemWide ? loadingAll : loadingOne;
 
@@ -102,7 +99,7 @@ export function DepartureBoard({ forcedStation, fillHeight }: DepartureBoardProp
 
   if (!activeStation && !showSystemWide) {
     return (
-      <RetroWindow title="Departures" className={winClass} contentClassName={bodyClass}>
+      <RetroWindow title="Departures" compact className={winClass} contentClassName={bodyClass}>
         <div className={styles.empty}>
           <span className={styles.emptyIcon}>&#9654;</span>
           Select a station on the map
@@ -116,14 +113,29 @@ export function DepartureBoard({ forcedStation, fillHeight }: DepartureBoardProp
     : `Departures — ${etdData?.stationName ?? activeStation}`;
 
   return (
-    <RetroWindow title={title} className={winClass} contentClassName={bodyClass}>
+    <RetroWindow title={title} compact className={winClass} contentClassName={bodyClass}>
       {isLoading ? (
         <div className={styles.loading}>Loading departures...</div>
       ) : departures.length === 0 ? (
-        <div className={styles.empty}>No departures found</div>
+        <div className={styles.empty}>
+          No trains due within the next {departureWindowMinutes} minutes
+        </div>
       ) : (
         <div className={`${styles.tableWrapper} ${fillHeight ? styles.tableWrapperFill : ''}`}>
-          <table className={styles.table}>
+          <table
+            className={`${styles.table} ${showSystemWide ? styles.tableSystem : styles.tableStation}`}
+          >
+            <colgroup>
+              {showSystemWide && <col className={styles.colFrom} />}
+              <col className={styles.colDest} />
+              <col className={styles.colMin} />
+              <col className={styles.colPlat} />
+              <col className={styles.colLen} />
+            </colgroup>
+            <caption className={styles.tableScopeNote}>
+              * Listed trains are due within the next {departureWindowMinutes} minutes (includes
+              “Leaving”).
+            </caption>
             <thead>
               <tr>
                 {showSystemWide && <th className={styles.headerFrom}>From</th>}

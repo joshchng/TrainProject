@@ -5,6 +5,7 @@ import { DepartureBoard } from '@/components/panels/DepartureBoard';
 import { TrainCount } from '@/components/panels/TrainCount';
 import { LineFilter } from '@/components/filters/LineFilter';
 import { DirectionFilter } from '@/components/filters/DirectionFilter';
+import { DepartureWindowFilter } from '@/components/filters/DepartureWindowFilter';
 import styles from './MapPage.module.css';
 
 export function MapPage() {
@@ -19,6 +20,7 @@ export function MapPage() {
           <TrainCount compact />
           <LineFilter compact />
           <DirectionFilter compact />
+          <DepartureWindowFilter compact />
         </div>
         <aside className={styles.dataRail} aria-label="Station and departures">
           <div className={styles.dataIntro}>

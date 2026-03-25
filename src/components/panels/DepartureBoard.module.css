@@ -14,23 +14,77 @@
 }
 
 .tableWrapper {
-  overflow-x: auto;
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 .tableWrapperFill {
   flex: 1 1 0;
   min-height: 0;
+  min-width: 0;
   overflow-y: auto;
-  overflow-x: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
 }
 
 .table {
   width: 100%;
+  max-width: 100%;
   border-collapse: collapse;
   font-family: var(--font-mono);
   font-size: var(--text-sm);
-  table-layout: auto;
+  table-layout: fixed;
+}
+
+/* Column widths: fit the panel without horizontal scroll; destination absorbs long names */
+.tableStation .colDest {
+  width: 56%;
+}
+
+.tableStation .colMin {
+  width: 14%;
+}
+
+.tableStation .colPlat {
+  width: 12%;
+}
+
+.tableStation .colLen {
+  width: 18%;
+}
+
+.tableSystem .colFrom {
+  width: 11%;
+}
+
+.tableSystem .colDest {
+  width: 40%;
+}
+
+.tableSystem .colMin {
+  width: 15%;
+}
+
+.tableSystem .colPlat {
+  width: 12%;
+}
+
+.tableSystem .colLen {
+  width: 22%;
+}
+
+.tableScopeNote {
+  caption-side: top;
+  text-align: left;
+  padding: 0 0 var(--space-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-muted);
+  line-height: 1.35;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  hyphens: auto;
 }
 
 .table th {
@@ -40,19 +94,18 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-muted);
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-1) var(--space-1);
   text-align: left;
   border-bottom: var(--border-hairline) solid var(--border-subtle);
   white-space: nowrap;
 }
 
 .headerFrom {
-  width: 1%;
   white-space: nowrap;
 }
 
 .headerDest {
-  min-width: 7.5rem;
+  min-width: 0;
 }
 
 .headerMin {
@@ -86,7 +139,7 @@
 .cellMin,
 .cellPlat,
 .cellLen {
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-1);
   color: var(--text-primary);
   perspective: 200px;
   vertical-align: middle;
@@ -140,8 +193,8 @@
   display: inline-flex;
   justify-content: center;
   align-items: center;
-  min-width: 3.25rem;
-  padding: 2px 6px;
+  min-width: 0;
+  padding: 2px 4px;
   box-sizing: border-box;
   white-space: nowrap;
 }

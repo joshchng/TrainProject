@@ -101,8 +101,9 @@
 
   /* === Layout === */
   --max-width: 1200px; /* content pages; shell uses full width in retro.css */
-  /* Home: tool + data columns share this width (two identical grid tracks) */
+  /* Home: tool rail; data rail is slightly wider for the departures table */
   --home-rail-width: clamp(260px, 18vw, 340px);
+  --home-data-rail-width: clamp(300px, 26vw, 440px);
   --header-height: 56px;
   --footer-height: 36px;
 }

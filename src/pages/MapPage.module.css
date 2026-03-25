@@ -10,7 +10,7 @@
   min-height: 0;
   display: grid;
   /* Map flexes; both side panels share the same track size */
-  grid-template-columns: minmax(0, 1fr) var(--home-rail-width) var(--home-rail-width);
+  grid-template-columns: minmax(0, 1fr) var(--home-rail-width) minmax(0, var(--home-data-rail-width));
   gap: 0 var(--space-4);
   padding: var(--space-4) var(--space-3);
   align-items: stretch;
