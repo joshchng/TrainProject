@@ -63,18 +63,33 @@ export function About() {
           Data
         </h2>
         <p className={styles.p}>
-          Schedules, train positions, advisories, all of it comes straight from BART's public{' '}
+          Everything here comes from BART's public{' '}
           <a href="https://api.bart.gov/docs/overview/index.aspx" target="_blank" rel="noreferrer">
-            BART API
+            API
           </a>
-          . Most of the time it matches what you see on the platform, but it may have delays, GPS glitches, or the API just hiccups for a bit.  
+          . Schedules, train positions, advisories. This site just reads it.
         </p>
         <p className={styles.p}>
-          If a departure time looks wrong or the map's doing something weird, it's worth a quick look at{' '}
+          The tracking system started as military hardware. Hughes Aircraft built it for the U.S. Army. BART adapted it.
+          Transmitters ride the trains. Receivers line the track. The system measures the travel time of radio waves
+          between them and works out where each train is.
+        </p>
+        <p className={styles.p}>
+          That data lands in the Operations Control Center, a dark room underneath Lake Merritt station. Seven monitors
+          per desk. Wall-sized maps. Color-coded trains crawling across the whole system. Controllers watch it all.
+        </p>
+        <p className={styles.p}>
+          The current system only knows which broad section of track a train occupies. Not the exact spot. BART is
+          spending $798 million to change that—4,500 new transponders, 1,100 radio antennas, true position tracking. When
+          it's done, the Transbay Tube goes from 24 trains per hour to 30.
+        </p>
+        <p className={styles.p}>
+          Most of the time the data matches what you see on the platform. Sometimes it doesn't. Disruptions, GPS
+          drift, API hiccups. If something looks off, check{' '}
           <a href="https://www.bart.gov/" target="_blank" rel="noreferrer">
             bart.gov
           </a>{' '}
-          or the signs at the station before you commit to a mad dash across the platform.
+          or the signs at the station.
         </p>
       </section>
 
@@ -85,8 +100,7 @@ export function About() {
           Privacy
         </h2>
         <p className={styles.p}>
-          There's no login and no ad trackers baked into this project. The app mostly just asks BART for the same kinds
-          of things the map and boards need, nothing sneaky on top of that.
+          There's no login and no ad trackers baked into this project.
         </p>
         <p className={styles.p}>
           Your phone carrier, your Wi-Fi, and whoever's hosting the site can still see that you loaded a page—that's
