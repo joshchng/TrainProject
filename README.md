@@ -2,6 +2,12 @@
 
 A retro-styled web app for the [San Francisco Bay Area BART](https://www.bart.gov/) system: interactive map, live train positions, departures, advisories, elevator status, and per-station detail pages. Data comes from the [official BART API](https://api.bart.gov/).
 
+## Screenshot
+
+Map view with line and direction filters, animated train positions, and the departures panel for a selected station.
+
+![BART Tracker — map with MacArthur selected, filters, and departures](docs/map-screenshot.png)
+
 ## Features
 
 - **System map** with stations and train blips, plus line and direction filters
